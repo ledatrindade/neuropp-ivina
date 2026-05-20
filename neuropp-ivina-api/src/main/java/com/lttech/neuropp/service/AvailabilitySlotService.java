@@ -12,21 +12,12 @@ import com.lttech.neuropp.repository.AvailabilitySlotRepository;
 
 /*
  * Service é onde ficam as regras de negócio.
- *
- * Controller recebe a requisição.
- * Service decide o que fazer.
- * Repository salva ou busca no banco.
  */
 @Service
 public class AvailabilitySlotService {
 
     private final AvailabilitySlotRepository availabilitySlotRepository;
 
-    /*
-     * Injeção de dependência.
-     *
-     * O Spring entrega automaticamente o repository para o service.
-     */
     public AvailabilitySlotService(AvailabilitySlotRepository availabilitySlotRepository) {
         this.availabilitySlotRepository = availabilitySlotRepository;
     }
@@ -37,17 +28,25 @@ public class AvailabilitySlotService {
     public AvailabilitySlotResponse createSlot(CreateAvailabilitySlotRequest request) {
 
         /*
-         * Regra de negócio:
+         * Regra 1:
          * O horário final precisa ser depois do horário inicial.
-         *
-         * Exemplo válido:
-         * 09:00 até 12:00
-         *
-         * Exemplo inválido:
-         * 12:00 até 09:00
          */
         if (!request.getEndTime().isAfter(request.getStartTime())) {
             throw new IllegalArgumentException("O horário final precisa ser depois do horário inicial.");
+        }
+
+        /*
+         * Regra 2:
+         * Não pode existir dois horários iguais no mesmo dia.
+         */
+        boolean alreadyExists = availabilitySlotRepository.existsByDateAndStartTimeAndEndTime(
+                request.getDate(),
+                request.getStartTime(),
+                request.getEndTime()
+        );
+
+        if (alreadyExists) {
+            throw new IllegalArgumentException("Já existe um horário cadastrado para esta data e intervalo.");
         }
 
         /*
@@ -61,14 +60,8 @@ public class AvailabilitySlotService {
                 .isBlocked(false)
                 .build();
 
-        /*
-         * Salvamos no banco.
-         */
         AvailabilitySlot savedSlot = availabilitySlotRepository.save(slot);
 
-        /*
-         * Retornamos a resposta formatada para o front-end.
-         */
         return AvailabilitySlotResponse.fromEntity(savedSlot);
     }
 
