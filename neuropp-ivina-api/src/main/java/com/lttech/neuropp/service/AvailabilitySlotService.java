@@ -11,7 +11,7 @@ import com.lttech.neuropp.entity.AvailabilitySlot;
 import com.lttech.neuropp.repository.AvailabilitySlotRepository;
 
 /*
- * Service é onde ficam as regras de negócio.
+ * Service é onde ficam as regras de negócio da agenda.
  */
 @Service
 public class AvailabilitySlotService {
@@ -37,7 +37,7 @@ public class AvailabilitySlotService {
 
         /*
          * Regra 2:
-         * Não pode existir dois horários iguais no mesmo dia.
+         * Não pode existir dois horários exatamente iguais.
          */
         boolean alreadyExists = availabilitySlotRepository.existsByDateAndStartTimeAndEndTime(
                 request.getDate(),
@@ -50,7 +50,7 @@ public class AvailabilitySlotService {
         }
 
         /*
-         * Montamos a entidade que será salva no banco.
+         * Se passou pelas validações, criamos a entidade.
          */
         AvailabilitySlot slot = AvailabilitySlot.builder()
                 .date(request.getDate())

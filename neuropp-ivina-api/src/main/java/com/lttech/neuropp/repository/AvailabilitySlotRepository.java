@@ -15,20 +15,20 @@ import com.lttech.neuropp.entity.AvailabilitySlot;
 public interface AvailabilitySlotRepository extends JpaRepository<AvailabilitySlot, UUID> {
 
     /*
-     * Busca os horários disponíveis de uma data.
+     * Busca horários disponíveis e não bloqueados de uma data.
      */
     List<AvailabilitySlot> findByDateAndIsAvailableTrueAndIsBlockedFalseOrderByStartTimeAsc(LocalDate date);
 
     /*
-     * Busca todos os horários de uma data.
+     * Busca todos os horários de uma data, inclusive ocupados ou bloqueados.
      */
     List<AvailabilitySlot> findByDateOrderByStartTimeAsc(LocalDate date);
 
     /*
      * Verifica se já existe um horário exatamente igual:
-     * mesma data, mesmo horário inicial e mesmo horário final.
+     * mesma data, mesmo início e mesmo fim.
      *
-     * Isso evita duplicidade na agenda.
+     * Isso evita que Ivina crie dois horários iguais.
      */
     boolean existsByDateAndStartTimeAndEndTime(
             LocalDate date,
