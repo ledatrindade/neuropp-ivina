@@ -90,11 +90,13 @@ public class GlobalExceptionHandler {
      * Esse é o nosso "plano B".
      * Se algo que não previmos acontecer, a API ainda responde de forma limpa.
      */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiErrorResponse> handleGenericException(
-            Exception exception,
-            HttpServletRequest request
-    ) {
+        @ExceptionHandler(Exception.class)
+        public ResponseEntity<ApiErrorResponse> handleGenericException(
+                Exception exception,
+                HttpServletRequest request
+        ) {
+        exception.printStackTrace();
+
         ApiErrorResponse response = ApiErrorResponse.of(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Internal Server Error",
@@ -103,5 +105,5 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-    }
+        }
 }
