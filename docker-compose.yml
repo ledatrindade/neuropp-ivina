@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: neuropp_postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: neuropp_db
+      POSTGRES_USER: neuropp_user
+      POSTGRES_PASSWORD: neuropp_pass
+
+    # Atenção:
+    # Porta do seu computador: 5433
+    # Porta interna do container: 5432
+    #
+    # Fizemos isso porque a porta 5432 já está sendo usada
+    # por outro projeto seu.
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - neuropp_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  neuropp_postgres_data:
