@@ -6,15 +6,16 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
 /*
- * Classe responsável pelas configurações de segurança da API.
+ * Configuração temporária de segurança.
  *
- * Hoje vamos deixar apenas a rota /api/health pública.
- * Depois vamos evoluir para:
- * - login;
- * - JWT;
- * - responsável;
- * - administradora;
- * - rotas protegidas.
+ * Nesta fase inicial, estamos apenas testando as rotas da API.
+ * Por isso, todas as rotas estão liberadas temporariamente.
+ *
+ * Depois vamos proteger:
+ * - rotas do responsável;
+ * - rotas da admin Ivina;
+ * - documentos privados;
+ * - agendamentos.
  */
 @Configuration
 public class SecurityConfig {
@@ -22,28 +23,28 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
+        System.out.println(">>> SecurityConfig personalizada carregada");
+
         http
                 /*
-                 * CSRF é muito usado para proteger formulários web tradicionais.
-                 * Como nossa aplicação será uma API REST usando JWT futuramente,
-                 * vamos deixar desabilitado por enquanto.
+                 * Desabilita CSRF para evitar erro 403 nos métodos POST, PUT e DELETE
+                 * enquanto estamos trabalhando com API REST.
                  */
                 .csrf(csrf -> csrf.disable())
 
                 /*
-                 * Aqui definimos quem pode acessar cada rota.
+                 * Desabilita login básico e formulário padrão do Spring Security.
+                 */
+                .httpBasic(httpBasic -> httpBasic.disable())
+                .formLogin(formLogin -> formLogin.disable())
+                .logout(logout -> logout.disable())
+
+                /*
+                 * Libera todas as rotas temporariamente.
+                 * Isso NÃO ficará assim na versão final.
                  */
                 .authorizeHttpRequests(auth -> auth
-
-                        /*
-                         * Rota pública para testar se a API está viva.
-                         */
-                        .requestMatchers("/api/health").permitAll()
-
-                        /*
-                         * Qualquer outra rota ainda exige autenticação.
-                         */
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 );
 
         return http.build();
