@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, UserRound } from "lucide-react";
 import { siteContent } from "../../content/siteContent";
 
 export function Header() {
@@ -33,13 +33,23 @@ export function Header() {
           </Link>
         </nav>
 
-        <Link
-          to="/agendar"
-          className="inline-flex items-center gap-2 rounded-full bg-[#E84545] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
-        >
-          <CalendarDays size={18} />
-          Marcar avaliação
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/login"
+            className="hidden items-center gap-2 rounded-full border border-[#3E8E91]/20 px-4 py-2 text-sm font-semibold text-[#3E8E91] transition hover:bg-[#3E8E91] hover:text-white sm:inline-flex"
+          >
+            <UserRound size={18} />
+            Entrar
+          </Link>
+
+          <Link
+            to="/agendar"
+            className="inline-flex items-center gap-2 rounded-full bg-[#E84545] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
+          >
+            <CalendarDays size={18} />
+            Marcar avaliação
+          </Link>
+        </div>
       </div>
     </header>
   );
