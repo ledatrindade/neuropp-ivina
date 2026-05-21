@@ -1,16 +1,20 @@
 import { Link } from "react-router";
 import { CalendarDays } from "lucide-react";
+import { siteContent } from "../../content/siteContent";
 
 export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-[#3E8E91]/10 bg-[#F7F3EA]/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
         <Link to="/" className="flex flex-col">
+          {/* MUDE O TEXTO AQUI: vem do arquivo siteContent.ts */}
           <span className="text-lg font-bold text-[#3E8E91]">
-            NeuroPP
+            {siteContent.brand.name}
           </span>
+
+          {/* MUDE O TEXTO AQUI: vem do arquivo siteContent.ts */}
           <span className="text-xs text-[#333333]/70">
-            Ivina Peixoto
+            {siteContent.brand.professionalName}
           </span>
         </Link>
 
