@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  CalendarCheck,
+  CalendarClock,
   CalendarDays,
+  CheckCircle,
   Clock,
   Loader2,
   RefreshCcw,
+  Trash2,
   XCircle,
 } from "lucide-react";
 import { Link } from "react-router";
@@ -107,6 +111,46 @@ export function MyAppointments() {
         error instanceof Error
           ? error.message
           : "Não foi possível cancelar o agendamento.";
+
+      setErrorMessage(message);
+    } finally {
+      setActionLoadingId(null);
+    }
+  }
+
+  async function handleHideFromHistory(appointmentId: string) {
+    const token = getAuthToken();
+
+    if (!token) {
+      setErrorMessage("Sessão expirada. Faça login novamente.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Deseja remover este agendamento do seu histórico? Ele deixará de aparecer para você, mas continuará registrado para a administradora."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setActionLoadingId(appointmentId);
+      setErrorMessage("");
+      setSuccessMessage("");
+
+      await apiRequest<null>(`/appointments/my/${appointmentId}/history`, {
+        method: "DELETE",
+        token,
+      });
+
+      setSuccessMessage("Agendamento removido do seu histórico.");
+      await loadAppointments();
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Não foi possível remover o agendamento do histórico.";
 
       setErrorMessage(message);
     } finally {
@@ -267,8 +311,8 @@ export function MyAppointments() {
               key={appointment.id}
               className="rounded-3xl bg-white p-6 shadow-sm"
             >
-              <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                <div>
+              <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="flex items-center gap-3">
                     <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#3E8E91]/10 text-[#3E8E91]">
                       <Clock size={24} />
@@ -285,31 +329,54 @@ export function MyAppointments() {
                     </div>
                   </div>
 
-                  <div className="mt-5 grid gap-3 text-sm text-[#333333]/75 md:grid-cols-3">
-                    <Info label="Data" value={appointment.date} />
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:justify-end">
+                    <StatusBadge status={appointment.status} />
 
-                    <Info
-                      label="Horário"
-                      value={`${formatTime(appointment.startTime)} às ${formatTime(
-                        appointment.endTime
-                      )}`}
-                    />
-
-                    <Info
-                      label="Status"
-                      value={translateStatus(appointment.status)}
-                    />
+                    <button
+                      type="button"
+                      onClick={() => handleHideFromHistory(appointment.id)}
+                      disabled={actionLoadingId === appointment.id}
+                      className="inline-flex items-center justify-center gap-2 rounded-full border border-[#333333]/20 bg-white px-4 py-2 text-xs font-semibold text-[#333333]/70 transition hover:bg-[#333333] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {actionLoadingId === appointment.id ? (
+                        <>
+                          <Loader2 className="animate-spin" size={15} />
+                          Removendo...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 size={15} />
+                          Remover do histórico
+                        </>
+                      )}
+                    </button>
                   </div>
-
-                  {appointment.notes && (
-                    <div className="mt-5 rounded-2xl bg-[#F7F3EA] p-4 text-sm leading-6 text-[#333333]/70">
-                      <strong>Observações:</strong> {appointment.notes}
-                    </div>
-                  )}
                 </div>
 
+                <div className="grid gap-3 text-sm text-[#333333]/75 md:grid-cols-3">
+                  <Info label="Data" value={formatDate(appointment.date)} />
+
+                  <Info
+                    label="Horário"
+                    value={`${formatTime(appointment.startTime)} às ${formatTime(
+                      appointment.endTime
+                    )}`}
+                  />
+
+                  <Info
+                    label="Status"
+                    value={translateStatus(appointment.status)}
+                  />
+                </div>
+
+                {appointment.notes && (
+                  <div className="rounded-2xl bg-[#F7F3EA] p-4 text-sm leading-6 text-[#333333]/70">
+                    <strong>Observações:</strong> {appointment.notes}
+                  </div>
+                )}
+
                 {canManage(appointment.status) && (
-                  <div className="flex flex-wrap gap-2 lg:min-w-72">
+                  <div className="flex flex-wrap gap-2 border-t border-[#3E8E91]/10 pt-5">
                     <button
                       type="button"
                       onClick={() => openReschedulePanel(appointment.id)}
@@ -339,84 +406,84 @@ export function MyAppointments() {
                     </button>
                   </div>
                 )}
-              </div>
 
-              {rescheduleAppointmentId === appointment.id && (
-                <section className="mt-6 rounded-3xl border border-[#3E8E91]/10 bg-[#F7F3EA] p-5">
-                  <h3 className="text-lg font-bold text-[#333333]">
-                    Reagendar atendimento
-                  </h3>
+                {rescheduleAppointmentId === appointment.id && (
+                  <section className="rounded-3xl border border-[#3E8E91]/10 bg-[#F7F3EA] p-5">
+                    <h3 className="text-lg font-bold text-[#333333]">
+                      Reagendar atendimento
+                    </h3>
 
-                  <p className="mt-2 text-sm text-[#333333]/70">
-                    Escolha uma nova data e um horário disponível.
-                  </p>
-
-                  <div className="mt-5 grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
-                    <div>
-                      <label className="mb-2 block text-sm font-semibold text-[#333333]">
-                        Nova data
-                      </label>
-
-                      <input
-                        type="date"
-                        value={rescheduleDate}
-                        onChange={(event) => {
-                          setRescheduleDate(event.target.value);
-                          loadAvailableSlotsForReschedule(event.target.value);
-                        }}
-                        className="w-full rounded-2xl border border-[#3E8E91]/20 bg-white px-4 py-3 outline-none transition focus:border-[#3E8E91]"
-                      />
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={closeReschedulePanel}
-                      className="rounded-2xl border border-[#333333]/10 px-4 py-3 font-semibold text-[#333333]/70 transition hover:bg-white"
-                    >
-                      Fechar
-                    </button>
-                  </div>
-
-                  {rescheduleDate && availableSlots.length === 0 && (
-                    <p className="mt-4 rounded-2xl bg-white p-4 text-sm text-[#333333]/70">
-                      Nenhum horário disponível para essa data.
+                    <p className="mt-2 text-sm text-[#333333]/70">
+                      Escolha uma nova data e um horário disponível.
                     </p>
-                  )}
 
-                  {availableSlots.length > 0 && (
-                    <div className="mt-5 grid gap-3 md:grid-cols-2">
-                      {availableSlots.map((slot) => (
-                        <button
-                          key={slot.id}
-                          type="button"
-                          onClick={() => setSelectedNewSlotId(slot.id)}
-                          className={`rounded-2xl border p-4 text-left transition ${
-                            selectedNewSlotId === slot.id
-                              ? "border-[#E84545] bg-[#E84545]/10"
-                              : "border-transparent bg-white hover:border-[#3E8E91]"
-                          }`}
-                        >
-                          <p className="font-bold text-[#333333]">
-                            {formatTime(slot.startTime)} às{" "}
-                            {formatTime(slot.endTime)}
-                          </p>
-                        </button>
-                      ))}
+                    <div className="mt-5 grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-[#333333]">
+                          Nova data
+                        </label>
+
+                        <input
+                          type="date"
+                          value={rescheduleDate}
+                          onChange={(event) => {
+                            setRescheduleDate(event.target.value);
+                            loadAvailableSlotsForReschedule(event.target.value);
+                          }}
+                          className="w-full rounded-2xl border border-[#3E8E91]/20 bg-white px-4 py-3 outline-none transition focus:border-[#3E8E91]"
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={closeReschedulePanel}
+                        className="rounded-2xl border border-[#333333]/10 px-4 py-3 font-semibold text-[#333333]/70 transition hover:bg-white"
+                      >
+                        Fechar
+                      </button>
                     </div>
-                  )}
 
-                  {selectedNewSlotId && (
-                    <button
-                      type="button"
-                      onClick={handleConfirmReschedule}
-                      disabled={actionLoadingId === appointment.id}
-                      className="mt-5 inline-flex rounded-full bg-[#E84545] px-6 py-3 font-semibold text-white transition hover:brightness-95 disabled:opacity-60"
-                    >
-                      Confirmar reagendamento
-                    </button>
-                  )}
-                </section>
-              )}
+                    {rescheduleDate && availableSlots.length === 0 && (
+                      <p className="mt-4 rounded-2xl bg-white p-4 text-sm text-[#333333]/70">
+                        Nenhum horário disponível para essa data.
+                      </p>
+                    )}
+
+                    {availableSlots.length > 0 && (
+                      <div className="mt-5 grid gap-3 md:grid-cols-2">
+                        {availableSlots.map((slot) => (
+                          <button
+                            key={slot.id}
+                            type="button"
+                            onClick={() => setSelectedNewSlotId(slot.id)}
+                            className={`rounded-2xl border p-4 text-left transition ${
+                              selectedNewSlotId === slot.id
+                                ? "border-[#E84545] bg-[#E84545]/10"
+                                : "border-transparent bg-white hover:border-[#3E8E91]"
+                            }`}
+                          >
+                            <p className="font-bold text-[#333333]">
+                              {formatTime(slot.startTime)} às{" "}
+                              {formatTime(slot.endTime)}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {selectedNewSlotId && (
+                      <button
+                        type="button"
+                        onClick={handleConfirmReschedule}
+                        disabled={actionLoadingId === appointment.id}
+                        className="mt-5 inline-flex rounded-full bg-[#E84545] px-6 py-3 font-semibold text-white transition hover:brightness-95 disabled:opacity-60"
+                      >
+                        Confirmar reagendamento
+                      </button>
+                    )}
+                  </section>
+                )}
+              </div>
             </article>
           ))}
         </section>
@@ -439,20 +506,80 @@ function Info({ label, value }: InfoProps) {
   );
 }
 
-function translateStatus(status: string) {
-  const statusMap: Record<string, string> = {
-    PENDING: "Pendente",
-    CONFIRMED: "Confirmado",
-    RESCHEDULED: "Reagendado",
-    CANCELLED: "Cancelado",
-    ATTENDED: "Compareceu",
-    MISSED: "Faltou",
-    COMPLETED: "Concluído",
-  };
+type StatusBadgeProps = {
+  status: string;
+};
 
-  return statusMap[status] || status;
+function StatusBadge({ status }: StatusBadgeProps) {
+  const statusConfig = getStatusConfig(status);
+  const Icon = statusConfig.icon;
+
+  return (
+    <span
+      className={`inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-bold ${statusConfig.className}`}
+    >
+      <Icon size={18} />
+      {statusConfig.label}
+    </span>
+  );
+}
+
+function getStatusConfig(status: string) {
+  const config = {
+    PENDING: {
+      label: "Pendente",
+      className: "bg-gray-50 text-gray-700",
+      icon: CalendarClock,
+    },
+    CONFIRMED: {
+      label: "Confirmado",
+      className: "bg-blue-50 text-blue-700",
+      icon: CalendarCheck,
+    },
+    RESCHEDULED: {
+      label: "Reagendado",
+      className: "bg-purple-50 text-purple-700",
+      icon: RefreshCcw,
+    },
+    CANCELLED: {
+      label: "Cancelado",
+      className: "bg-red-50 text-red-700",
+      icon: XCircle,
+    },
+    ATTENDED: {
+      label: "Compareceu",
+      className: "bg-green-50 text-green-700",
+      icon: CheckCircle,
+    },
+    MISSED: {
+      label: "Faltou",
+      className: "bg-yellow-50 text-yellow-700",
+      icon: XCircle,
+    },
+    COMPLETED: {
+      label: "Concluído",
+      className: "bg-[#3E8E91]/10 text-[#3E8E91]",
+      icon: CheckCircle,
+    },
+  } as const;
+
+  return config[status as keyof typeof config] || config.PENDING;
+}
+
+function translateStatus(status: string) {
+  return getStatusConfig(status).label;
 }
 
 function canManage(status: string) {
   return status === "CONFIRMED" || status === "RESCHEDULED";
+}
+
+function formatDate(date: string) {
+  const [year, month, day] = date.split("-");
+
+  if (!year || !month || !day) {
+    return date;
+  }
+
+  return `${day}/${month}/${year}`;
 }

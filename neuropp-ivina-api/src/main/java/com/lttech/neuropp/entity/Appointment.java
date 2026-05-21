@@ -57,8 +57,6 @@ public class Appointment {
 
     /*
      * Horário escolhido.
-     *
-     * OneToOne porque cada horário só pode ter um agendamento.
      */
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "slot_id", nullable = false, unique = true)
@@ -82,6 +80,22 @@ public class Appointment {
      */
     private Boolean attended;
 
+    /*
+     * Quando true, o agendamento não aparece mais na área do responsável.
+     */
+    @Column(name = "hidden_for_responsible")
+    private Boolean hiddenForResponsible;
+
+    /*
+     * Quando true, o agendamento não aparece mais no histórico administrativo.
+     *
+     * Importante:
+     * Não usamos isso para apagar do banco imediatamente. É uma ocultação
+     * lógica para manter o sistema mais seguro.
+     */
+    @Column(name = "hidden_for_admin")
+    private Boolean hiddenForAdmin;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -98,6 +112,14 @@ public class Appointment {
 
         if (this.attended == null) {
             this.attended = false;
+        }
+
+        if (this.hiddenForResponsible == null) {
+            this.hiddenForResponsible = false;
+        }
+
+        if (this.hiddenForAdmin == null) {
+            this.hiddenForAdmin = false;
         }
     }
 

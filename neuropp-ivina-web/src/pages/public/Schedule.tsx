@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { BackButton } from "../../components/ui/BackButton";
 import {
   CalendarDays,
   ChevronLeft,
@@ -12,6 +11,7 @@ import { siteContent } from "../../content/siteContent";
 import { apiRequest } from "../../services/api";
 import { isAuthenticated } from "../../services/authStorage";
 import { saveSelectedSlot } from "../../services/appointmentStorage";
+import { BackButton } from "../../components/ui/BackButton";
 import type { AvailabilitySlot } from "../../types/availability";
 
 type CalendarDay = {
@@ -119,6 +119,10 @@ export function Schedule() {
   }
 
   function handleSelectSlot(slot: AvailabilitySlot) {
+    if (!slot.isAvailable || slot.isBlocked) {
+      return;
+    }
+
     setSelectedSlot(slot);
   }
 
@@ -280,14 +284,18 @@ export function Schedule() {
 
               {slots.map((slot) => {
                 const isSelected = selectedSlot?.id === slot.id;
+                const isDisabled = !slot.isAvailable || slot.isBlocked;
 
                 return (
                   <button
                     key={slot.id}
                     type="button"
                     onClick={() => handleSelectSlot(slot)}
+                    disabled={isDisabled}
                     className={`w-full rounded-3xl border p-5 text-left transition ${
-                      isSelected
+                      isDisabled
+                        ? "cursor-not-allowed border-transparent bg-gray-100 opacity-50"
+                        : isSelected
                         ? "border-[#E84545] bg-[#E84545]/10"
                         : "border-[#3E8E91]/10 bg-[#F7F3EA] hover:border-[#3E8E91]"
                     }`}
@@ -304,7 +312,9 @@ export function Schedule() {
                         </p>
 
                         <p className="text-sm text-[#333333]/60">
-                          Atendimento presencial
+                          {isDisabled
+                            ? "Horário indisponível"
+                            : "Atendimento presencial"}
                         </p>
                       </div>
                     </div>
@@ -363,7 +373,6 @@ function buildCalendarDays(
 
   for (let index = 0; index < 42; index++) {
     const date = new Date(startDate);
-
     date.setDate(startDate.getDate() + index);
 
     const isoDate = formatDateToIso(date);
