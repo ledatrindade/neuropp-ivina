@@ -12,42 +12,91 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.lttech.neuropp.dto.AppointmentResponse;
-import com.lttech.neuropp.dto.CreateAppointmentRequest;
+import com.lttech.neuropp.dto.CreateMyAppointmentRequest;
 import com.lttech.neuropp.dto.RescheduleAppointmentRequest;
 import com.lttech.neuropp.dto.UpdateAppointmentStatusRequest;
+import com.lttech.neuropp.security.AuthenticatedUserService;
 import com.lttech.neuropp.service.AppointmentService;
 
 import jakarta.validation.Valid;
 
 /*
  * Controller dos agendamentos.
- *
- * Ele recebe as requisições HTTP e chama o service.
  */
 @RestController
 @RequestMapping("/api")
 public class AppointmentController {
 
     private final AppointmentService appointmentService;
+    private final AuthenticatedUserService authenticatedUserService;
 
-    public AppointmentController(AppointmentService appointmentService) {
-        this.appointmentService = appointmentService;
-    }
-
-    /*
-     * Cria um agendamento.
-     *
-     * POST http://localhost:8080/api/appointments
-     */
-    @PostMapping("/appointments")
-    public AppointmentResponse createAppointment(
-            @Valid @RequestBody CreateAppointmentRequest request
+    public AppointmentController(
+            AppointmentService appointmentService,
+            AuthenticatedUserService authenticatedUserService
     ) {
-        return appointmentService.createAppointment(request);
+        this.appointmentService = appointmentService;
+        this.authenticatedUserService = authenticatedUserService;
     }
 
     /*
-     * Lista todos os agendamentos para o painel admin.
+     * Responsável logado cria um agendamento.
+     *
+     * POST http://localhost:8080/api/appointments/my
+     *
+     * O responsável vem do token.
+     */
+    @PostMapping("/appointments/my")
+    public AppointmentResponse createMyAppointment(
+            @Valid @RequestBody CreateMyAppointmentRequest request
+    ) {
+        UUID responsibleId = authenticatedUserService.getAuthenticatedUserId();
+
+        return appointmentService.createAppointmentForResponsible(responsibleId, request);
+    }
+
+    /*
+     * Responsável logado lista seus próprios agendamentos.
+     *
+     * GET http://localhost:8080/api/appointments/my
+     */
+    @GetMapping("/appointments/my")
+    public List<AppointmentResponse> listMyAppointments() {
+        UUID responsibleId = authenticatedUserService.getAuthenticatedUserId();
+
+        return appointmentService.listAppointmentsByResponsible(responsibleId);
+    }
+
+    /*
+     * Responsável logado cancela seu próprio agendamento.
+     *
+     * PUT http://localhost:8080/api/appointments/my/{appointmentId}/cancel
+     */
+    @PutMapping("/appointments/my/{appointmentId}/cancel")
+    public AppointmentResponse cancelMyAppointment(
+            @PathVariable UUID appointmentId
+    ) {
+        UUID responsibleId = authenticatedUserService.getAuthenticatedUserId();
+
+        return appointmentService.cancelAppointmentForResponsible(responsibleId, appointmentId);
+    }
+
+    /*
+     * Responsável logado reagenda seu próprio agendamento.
+     *
+     * PUT http://localhost:8080/api/appointments/my/{appointmentId}/reschedule
+     */
+    @PutMapping("/appointments/my/{appointmentId}/reschedule")
+    public AppointmentResponse rescheduleMyAppointment(
+            @PathVariable UUID appointmentId,
+            @Valid @RequestBody RescheduleAppointmentRequest request
+    ) {
+        UUID responsibleId = authenticatedUserService.getAuthenticatedUserId();
+
+        return appointmentService.rescheduleAppointmentForResponsible(responsibleId, appointmentId, request);
+    }
+
+    /*
+     * Admin lista todos os agendamentos.
      *
      * GET http://localhost:8080/api/admin/appointments
      */
@@ -57,44 +106,7 @@ public class AppointmentController {
     }
 
     /*
-     * Lista agendamentos de um responsável.
-     *
-     * GET http://localhost:8080/api/appointments/responsible/{responsibleId}
-     */
-    @GetMapping("/appointments/responsible/{responsibleId}")
-    public List<AppointmentResponse> listAppointmentsByResponsible(
-            @PathVariable UUID responsibleId
-    ) {
-        return appointmentService.listAppointmentsByResponsible(responsibleId);
-    }
-
-    /*
-     * Cancelamento feito pelo responsável.
-     *
-     * PUT http://localhost:8080/api/appointments/{appointmentId}/cancel
-     */
-    @PutMapping("/appointments/{appointmentId}/cancel")
-    public AppointmentResponse cancelAppointment(
-            @PathVariable UUID appointmentId
-    ) {
-        return appointmentService.cancelAppointment(appointmentId);
-    }
-
-    /*
-     * Reagendamento feito pelo responsável.
-     *
-     * PUT http://localhost:8080/api/appointments/{appointmentId}/reschedule
-     */
-    @PutMapping("/appointments/{appointmentId}/reschedule")
-    public AppointmentResponse rescheduleAppointment(
-            @PathVariable UUID appointmentId,
-            @Valid @RequestBody RescheduleAppointmentRequest request
-    ) {
-        return appointmentService.rescheduleAppointment(appointmentId, request);
-    }
-
-    /*
-     * Atualização de status feita pela admin.
+     * Admin atualiza status do agendamento.
      *
      * PUT http://localhost:8080/api/admin/appointments/{appointmentId}/status
      */

@@ -14,12 +14,6 @@ import com.lttech.neuropp.security.JwtAuthenticationFilter;
 
 /*
  * Configuração de segurança da API.
- *
- * Agora deixamos de liberar tudo.
- * A API passa a respeitar:
- * - rotas públicas;
- * - rotas autenticadas;
- * - rotas exclusivas de ADMIN.
  */
 @Configuration
 public class SecurityConfig {
@@ -38,10 +32,6 @@ public class SecurityConfig {
                 .formLogin(formLogin -> formLogin.disable())
                 .logout(logout -> logout.disable())
 
-                /*
-                 * JWT não usa sessão no servidor.
-                 * Cada requisição precisa enviar o token.
-                 */
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
@@ -67,14 +57,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/**").authenticated()
 
                         /*
-                         * Qualquer outra coisa fica bloqueada.
+                         * Qualquer outra rota fica bloqueada.
                          */
                         .anyRequest().denyAll()
                 )
 
-                /*
-                 * Nosso filtro JWT roda antes do filtro padrão de usuário/senha.
-                 */
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
@@ -83,9 +70,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /*
-     * Criptografia de senha.
-     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
