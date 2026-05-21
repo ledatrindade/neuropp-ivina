@@ -8,6 +8,7 @@ import { Contact } from "./pages/public/Contact";
 import { Schedule } from "./pages/public/Schedule";
 import { Login } from "./pages/auth/Login";
 import { Register } from "./pages/auth/Register";
+import { ConfirmAppointment } from "./pages/responsible/ConfirmAppointment";
 
 function App() {
   return (
@@ -23,6 +24,8 @@ function App() {
 
         <Route path="/login" element={<Login />} />
         <Route path="/cadastro" element={<Register />} />
+
+        <Route path="/confirmar-agendamento" element={<ConfirmAppointment />} />
       </Routes>
 
       <Footer />

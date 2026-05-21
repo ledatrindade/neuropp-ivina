@@ -3,10 +3,8 @@ import type { LoginResponse } from "../types/auth";
 /*
  * Serviço simples para guardar os dados do usuário logado.
  *
- * Por enquanto vamos usar localStorage.
- *
- * Em produção, poderíamos evoluir para uma estratégia mais segura,
- * mas para o MVP e aprendizado está ótimo.
+ * MUDE A ESTRATÉGIA AQUI:
+ * Por enquanto usamos localStorage para o MVP.
  */
 
 const AUTH_KEY = "neuropp_auth_user";

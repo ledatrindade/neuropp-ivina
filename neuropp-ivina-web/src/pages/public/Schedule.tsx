@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router";
 import {
   CalendarDays,
   ChevronLeft,
@@ -8,17 +9,9 @@ import {
 } from "lucide-react";
 import { siteContent } from "../../content/siteContent";
 import { apiRequest } from "../../services/api";
+import { isAuthenticated } from "../../services/authStorage";
+import { saveSelectedSlot } from "../../services/appointmentStorage";
 import type { AvailabilitySlot } from "../../types/availability";
-
-/*
- * Página de agendamento.
- *
- * Aqui criamos um calendário visual completo.
- *
- * MUDE O TEXTO AQUI:
- * Os principais textos vêm do arquivo:
- * src/content/siteContent.ts
- */
 
 type CalendarDay = {
   date: Date;
@@ -33,6 +26,8 @@ type CalendarDay = {
 const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 export function Schedule() {
+  const navigate = useNavigate();
+
   const today = useMemo(() => new Date(), []);
 
   const [currentMonth, setCurrentMonth] = useState(
@@ -52,9 +47,6 @@ export function Schedule() {
     return buildCalendarDays(currentMonth, selectedDate);
   }, [currentMonth, selectedDate]);
 
-  /*
-   * Sempre que a data selecionada mudar, buscamos os horários na API.
-   */
   useEffect(() => {
     searchAvailabilityByDate(selectedDate);
   }, [selectedDate]);
@@ -65,10 +57,6 @@ export function Schedule() {
       setErrorMessage("");
       setSelectedSlot(null);
 
-      /*
-       * Aqui o front chama a API Java:
-       * GET http://localhost:8080/api/availability?date=YYYY-MM-DD
-       */
       const response = await apiRequest<AvailabilitySlot[]>(
         `/availability?date=${date}`
       );
@@ -118,52 +106,59 @@ export function Schedule() {
   }
 
   function handleSelectDay(day: CalendarDay) {
-    /*
-     * Se quiser permitir clicar em dias passados, remova esse if.
-     */
     if (day.isPast) {
       return;
     }
 
     setSelectedDate(day.isoDate);
 
-    /*
-     * Se o usuário clicar em um dia do mês anterior/próximo,
-     * o calendário muda para o mês daquele dia.
-     */
     if (!day.isCurrentMonth) {
       setCurrentMonth(new Date(day.date.getFullYear(), day.date.getMonth(), 1));
     }
   }
 
+  function handleSelectSlot(slot: AvailabilitySlot) {
+    setSelectedSlot(slot);
+  }
+
+  function handleContinueToConfirmation() {
+    if (!selectedSlot) {
+      setErrorMessage("Selecione um horário antes de continuar.");
+      return;
+    }
+
+    saveSelectedSlot(selectedSlot);
+
+    if (!isAuthenticated()) {
+      navigate("/login?redirect=/confirmar-agendamento");
+      return;
+    }
+
+    navigate("/confirmar-agendamento");
+  }
+
   function formatTime(time: string) {
-    /*
-     * A API retorna algo como "09:00:00".
-     * Para o usuário, mostramos "09:00".
-     */
     return time.slice(0, 5);
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-5 py-12">
+    <main className="mx-auto max-w-5xl px-4 py-8 md:px-5 md:py-10">
       <section className="mb-8">
         <span className="mb-4 inline-flex rounded-full bg-[#3E8E91]/10 px-4 py-2 text-sm font-semibold text-[#3E8E91]">
           Agendamento online
         </span>
 
-        {/* MUDE O TEXTO AQUI: altere em siteContent.ts */}
         <h1 className="text-4xl font-bold text-[#3E8E91] md:text-5xl">
           {siteContent.schedule.title}
         </h1>
 
-        {/* MUDE O TEXTO AQUI: altere em siteContent.ts */}
         <p className="mt-5 max-w-3xl text-lg leading-8 text-[#333333]/75">
           {siteContent.schedule.description}
         </p>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[1.3fr_0.9fr]">
-        <div className="rounded-[2rem] bg-white p-5 shadow-sm md:p-8">
+      <section className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="rounded-3xl bg-white p-4 shadow-sm md:p-6">
           <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#3E8E91]">
@@ -214,32 +209,29 @@ export function Schedule() {
               </div>
             ))}
 
-            {calendarDays.map((day) => {
-              return (
-                <button
-                  key={day.isoDate}
-                  type="button"
-                  onClick={() => handleSelectDay(day)}
-                  disabled={day.isPast}
-                  className={getCalendarDayClass(day)}
-                >
-                  <span>{day.dayNumber}</span>
+            {calendarDays.map((day) => (
+              <button
+                key={day.isoDate}
+                type="button"
+                onClick={() => handleSelectDay(day)}
+                disabled={day.isPast}
+                className={getCalendarDayClass(day)}
+              >
+                <span>{day.dayNumber}</span>
 
-                  {day.isToday && (
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#E84545]" />
-                  )}
-                </button>
-              );
-            })}
+                {day.isToday && (
+                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#E84545]" />
+                )}
+              </button>
+            ))}
           </div>
 
           <div className="mt-6 rounded-2xl bg-[#F7F3EA] p-4 text-sm leading-6 text-[#333333]/70">
-            {/* MUDE O TEXTO AQUI: altere em siteContent.ts */}
             {siteContent.schedule.notice}
           </div>
         </div>
 
-        <aside className="rounded-[2rem] bg-white p-5 shadow-sm md:p-8">
+        <aside className="rounded-3xl bg-white p-4 shadow-sm md:p-6">
           <div className="flex items-start gap-3">
             <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#3E8E91]/10 text-[#3E8E91]">
               <CalendarDays size={24} />
@@ -288,7 +280,7 @@ export function Schedule() {
                   <button
                     key={slot.id}
                     type="button"
-                    onClick={() => setSelectedSlot(slot)}
+                    onClick={() => handleSelectSlot(slot)}
                     className={`w-full rounded-3xl border p-5 text-left transition ${
                       isSelected
                         ? "border-[#E84545] bg-[#E84545]/10"
@@ -329,12 +321,13 @@ export function Schedule() {
               </h3>
 
               <p className="mt-2 text-sm leading-6 text-[#333333]/70">
-                Na próxima etapa, este botão levará para cadastro/login do
-                responsável e confirmação do agendamento.
+                Na próxima etapa, você poderá informar os dados da criança e
+                confirmar o agendamento.
               </p>
 
               <button
                 type="button"
+                onClick={handleContinueToConfirmation}
                 className="mt-5 w-full rounded-full bg-[#E84545] px-6 py-3 font-semibold text-white transition hover:brightness-95"
               >
                 Continuar para cadastro/login
@@ -347,14 +340,6 @@ export function Schedule() {
   );
 }
 
-/*
- * Monta os dias que aparecem no calendário.
- *
- * Inclui:
- * - dias do mês anterior para completar a primeira semana;
- * - dias do mês atual;
- * - dias do próximo mês para fechar a grade.
- */
 function buildCalendarDays(
   currentMonth: Date,
   selectedDate: string
@@ -393,7 +378,7 @@ function buildCalendarDays(
 
 function getCalendarDayClass(day: CalendarDay) {
   const baseClass =
-    "flex min-h-20 flex-col items-center justify-center rounded-2xl border text-sm font-semibold transition md:min-h-24";
+    "flex min-h-14 flex-col items-center justify-center rounded-xl border text-sm font-semibold transition sm:min-h-16 md:min-h-[72px]";
 
   if (day.isPast) {
     return `${baseClass} cursor-not-allowed border-transparent bg-[#F7F3EA] text-[#333333]/25`;
