@@ -11,14 +11,39 @@ export function Login() {
 
   const redirectParam = new URLSearchParams(location.search).get("redirect");
 
-  const safeRedirect =
-    redirectParam && redirectParam.startsWith("/") ? redirectParam : "/agendar";
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  function getRedirectByRole(role: LoginResponse["role"]) {
+    if (role === "ADMIN") {
+      if (redirectParam && redirectParam.startsWith("/admin")) {
+        return redirectParam;
+      }
+
+      return "/admin";
+    }
+
+    /*
+     * Se o responsável veio do fluxo de agendamento,
+     * volta para a tela de confirmação.
+     */
+    if (
+      redirectParam &&
+      redirectParam.startsWith("/") &&
+      !redirectParam.startsWith("/admin")
+    ) {
+      return redirectParam;
+    }
+
+    /*
+     * Login comum pelo botão do topo:
+     * responsável vai para a área dele.
+     */
+    return "/responsavel";
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -37,12 +62,7 @@ export function Login() {
 
       saveAuthUser(response);
 
-      if (response.role === "ADMIN") {
-        navigate("/admin");
-        return;
-      }
-
-      navigate(safeRedirect);
+      navigate(getRedirectByRole(response.role));
     } catch (error) {
       const message =
         error instanceof Error
@@ -67,8 +87,8 @@ export function Login() {
         </h1>
 
         <p className="mt-5 text-lg leading-8 text-[#333333]/75">
-          Acesse sua conta para acompanhar agendamentos, cadastrar crianças e,
-          futuramente, visualizar documentos liberados pela profissional.
+          Acesse sua conta para acompanhar agendamentos, cadastrar crianças e
+          visualizar documentos liberados pela profissional.
         </p>
       </section>
 

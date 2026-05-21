@@ -1,10 +1,3 @@
-/*
- * Arquivo central para comunicação com a API Java.
- *
- * Front-end: http://localhost:5173
- * Back-end:  http://localhost:8080
- */
-
 const API_BASE_URL = "http://localhost:8080/api";
 
 type RequestOptions = {
@@ -28,17 +21,26 @@ export async function apiRequest<T>(
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => null);
+  const responseText = await response.text();
 
-    throw new Error(
-      errorData?.message || "Ocorreu um erro ao comunicar com a API."
-    );
+  if (!response.ok) {
+    let errorMessage = "Ocorreu um erro ao comunicar com a API.";
+
+    if (responseText) {
+      try {
+        const errorData = JSON.parse(responseText);
+        errorMessage = errorData?.message || errorMessage;
+      } catch {
+        errorMessage = responseText;
+      }
+    }
+
+    throw new Error(errorMessage);
   }
 
-  if (response.status === 204) {
+  if (!responseText) {
     return null as T;
   }
 
-  return response.json();
+  return JSON.parse(responseText) as T;
 }
