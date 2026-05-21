@@ -330,7 +330,9 @@ export function Schedule() {
                 onClick={handleContinueToConfirmation}
                 className="mt-5 w-full rounded-full bg-[#E84545] px-6 py-3 font-semibold text-white transition hover:brightness-95"
               >
-                Continuar para cadastro/login
+                {isAuthenticated()
+                  ? "Continuar para confirmação"
+                  : "Entrar/cadastrar para continuar"}
               </button>
             </div>
           )}

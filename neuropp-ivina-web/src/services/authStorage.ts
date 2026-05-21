@@ -9,8 +9,15 @@ import type { LoginResponse } from "../types/auth";
 
 const AUTH_KEY = "neuropp_auth_user";
 
+export const AUTH_CHANGED_EVENT = "neuropp_auth_changed";
+
+function notifyAuthChanged() {
+  window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
+}
+
 export function saveAuthUser(user: LoginResponse) {
   localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+  notifyAuthChanged();
 }
 
 export function getAuthUser(): LoginResponse | null {
@@ -37,4 +44,5 @@ export function isAuthenticated() {
 
 export function logout() {
   localStorage.removeItem(AUTH_KEY);
+  notifyAuthChanged();
 }
