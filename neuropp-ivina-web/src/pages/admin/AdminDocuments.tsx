@@ -1,10 +1,13 @@
 import { FormEvent, useEffect, useState } from "react";
-import { ArrowLeft, FileText, Loader2, Send } from "lucide-react";
-import { Link } from "react-router";
+import { FileText, Loader2, Send } from "lucide-react";
 import { apiRequest } from "../../services/api";
 import { getAuthToken } from "../../services/authStorage";
+import { BackButton } from "../../components/ui/BackButton";
 import type { AppointmentResponse } from "../../types/appointment";
-import type { AttendanceDocumentResponse, DocumentType } from "../../types/document";
+import type {
+  AttendanceDocumentResponse,
+  DocumentType,
+} from "../../types/document";
 
 const documentTypes: { label: string; value: DocumentType }[] = [
   { label: "Avaliação", value: "EVALUATION" },
@@ -45,7 +48,6 @@ export function AdminDocuments() {
     try {
       setIsLoading(true);
       setErrorMessage("");
-      setSuccessMessage("");
 
       const [appointmentsResponse, documentsResponse] = await Promise.all([
         apiRequest<AppointmentResponse[]>("/admin/appointments", { token }),
@@ -135,9 +137,7 @@ export function AdminDocuments() {
       "Deseja liberar este documento para o responsável?"
     );
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     try {
       setActionLoadingId(documentId);
@@ -167,23 +167,17 @@ export function AdminDocuments() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-5 py-10">
-      <Link
-        to="/admin"
-        className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#3E8E91]/20 px-4 py-2 text-sm font-semibold text-[#3E8E91] transition hover:bg-[#3E8E91] hover:text-white"
-      >
-        <ArrowLeft size={18} />
-        Voltar para o painel
-      </Link>
+    <main className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <BackButton to="/admin" label="Voltar para o painel" className="mb-0" />
 
-      <section className="mb-8">
-        <span className="mb-4 inline-flex rounded-full bg-[#3E8E91]/10 px-4 py-2 text-sm font-semibold text-[#3E8E91]">
+        <span className="inline-flex w-fit rounded-full bg-[#3E8E91]/10 px-4 py-2 text-sm font-semibold text-[#3E8E91]">
           Painel administrativo
         </span>
+      </div>
 
-        <h1 className="text-4xl font-bold text-[#3E8E91]">
-          Documentos
-        </h1>
+      <section className="mb-8">
+        <h1 className="text-4xl font-bold text-[#3E8E91]">Documentos</h1>
 
         <p className="mt-4 max-w-3xl text-lg leading-8 text-[#333333]/75">
           Crie registros de avaliação, sessão, devolutiva ou orientação e libere
@@ -326,7 +320,7 @@ export function AdminDocuments() {
                 Nenhum documento criado ainda.
               </div>
             ) : (
-              <div className="mt-5 space-y-4">
+              <div className="mt-5 max-h-[720px] space-y-4 overflow-y-auto pr-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-[#3E8E91]/30">
                 {documents.map((document) => (
                   <article
                     key={document.id}

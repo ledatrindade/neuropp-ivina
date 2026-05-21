@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ArrowLeft,
   CalendarDays,
   CheckCircle,
   ClipboardList,
   Loader2,
+  Trash2,
   XCircle,
 } from "lucide-react";
-import { Link } from "react-router";
 import { apiRequest } from "../../services/api";
 import { getAuthToken } from "../../services/authStorage";
-import type { AppointmentResponse, AppointmentStatus } from "../../types/appointment";
+import { BackButton } from "../../components/ui/BackButton";
+import type {
+  AppointmentResponse,
+  AppointmentStatus,
+} from "../../types/appointment";
 
 const statusOptions: { label: string; value: AppointmentStatus }[] = [
   { label: "Confirmado", value: "CONFIRMED" },
@@ -59,13 +62,10 @@ export function AdminAppointments() {
     try {
       setIsLoading(true);
       setErrorMessage("");
-      setSuccessMessage("");
 
       const response = await apiRequest<AppointmentResponse[]>(
         "/admin/appointments",
-        {
-          token,
-        }
+        { token }
       );
 
       setAppointments(response);
@@ -97,19 +97,22 @@ export function AdminAppointments() {
       setErrorMessage("");
       setSuccessMessage("");
 
-      await apiRequest<AppointmentResponse>(
+      const updatedAppointment = await apiRequest<AppointmentResponse>(
         `/admin/appointments/${appointmentId}/status`,
         {
           method: "PUT",
           token,
-          body: {
-            status,
-          },
+          body: { status },
         }
       );
 
+      setAppointments((currentAppointments) =>
+        currentAppointments.map((appointment) =>
+          appointment.id === appointmentId ? updatedAppointment : appointment
+        )
+      );
+
       setSuccessMessage("Status atualizado com sucesso.");
-      await loadAppointments();
     } catch (error) {
       const message =
         error instanceof Error
@@ -122,28 +125,65 @@ export function AdminAppointments() {
     }
   }
 
+  async function handleHideFromAdminHistory(appointmentId: string) {
+    const token = getAuthToken();
+
+    if (!token) {
+      setErrorMessage("Sessão expirada. Faça login novamente.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Deseja remover este agendamento do histórico administrativo? Ele deixará de aparecer nesta tela."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setActionLoadingId(appointmentId);
+      setErrorMessage("");
+      setSuccessMessage("");
+
+      await apiRequest<null>(`/admin/appointments/${appointmentId}/history`, {
+        method: "DELETE",
+        token,
+      });
+
+      setAppointments((currentAppointments) =>
+        currentAppointments.filter((appointment) => appointment.id !== appointmentId)
+      );
+
+      setSuccessMessage("Agendamento removido do histórico administrativo.");
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Não foi possível remover o agendamento do histórico.";
+
+      setErrorMessage(message);
+    } finally {
+      setActionLoadingId(null);
+    }
+  }
+
   function formatTime(time: string) {
     return time.slice(0, 5);
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-5 py-10">
-      <Link
-        to="/admin"
-        className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#3E8E91]/20 px-4 py-2 text-sm font-semibold text-[#3E8E91] transition hover:bg-[#3E8E91] hover:text-white"
-      >
-        <ArrowLeft size={18} />
-        Voltar para o painel
-      </Link>
+    <main className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <BackButton to="/admin" label="Voltar para o painel" className="mb-0" />
 
-      <section className="mb-8">
-        <span className="mb-4 inline-flex rounded-full bg-[#3E8E91]/10 px-4 py-2 text-sm font-semibold text-[#3E8E91]">
+        <span className="inline-flex w-fit rounded-full bg-[#3E8E91]/10 px-4 py-2 text-sm font-semibold text-[#3E8E91]">
           Painel administrativo
         </span>
+      </div>
 
-        <h1 className="text-4xl font-bold text-[#3E8E91]">
-          Agendamentos
-        </h1>
+      <section className="mb-8">
+        <h1 className="text-4xl font-bold text-[#3E8E91]">Agendamentos</h1>
 
         <p className="mt-4 max-w-3xl text-lg leading-8 text-[#333333]/75">
           Acompanhe as avaliações marcadas e atualize o status de cada
@@ -240,8 +280,8 @@ export function AdminAppointments() {
               key={appointment.id}
               className="rounded-3xl bg-white p-6 shadow-sm"
             >
-              <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                <div>
+              <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div className="flex items-center gap-3">
                     <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#3E8E91]/10 text-[#3E8E91]">
                       <CalendarDays size={24} />
@@ -259,29 +299,35 @@ export function AdminAppointments() {
                     </div>
                   </div>
 
-                  <div className="mt-5 grid gap-3 text-sm text-[#333333]/75 md:grid-cols-4">
-                    <Info label="Data" value={appointment.date} />
-                    <Info
-                      label="Horário"
-                      value={`${formatTime(appointment.startTime)} às ${formatTime(
-                        appointment.endTime
-                      )}`}
-                    />
-                    <Info label="Idade" value={`${appointment.childAge} anos`} />
-                    <Info
-                      label="Status"
-                      value={translateStatus(appointment.status)}
-                    />
-                  </div>
-
-                  {appointment.notes && (
-                    <div className="mt-5 rounded-2xl bg-[#F7F3EA] p-4 text-sm leading-6 text-[#333333]/70">
-                      <strong>Observações:</strong> {appointment.notes}
-                    </div>
-                  )}
+                  <span
+                    className={`inline-flex w-fit rounded-full px-4 py-2 text-sm font-bold ${getStatusClass(
+                      appointment.status
+                    )}`}
+                  >
+                    {translateStatus(appointment.status)}
+                  </span>
                 </div>
 
-                <div className="grid gap-2 sm:grid-cols-2 lg:min-w-72">
+                <div className="grid gap-3 text-sm text-[#333333]/75 md:grid-cols-3">
+                  <Info label="Data" value={appointment.date} />
+
+                  <Info
+                    label="Horário"
+                    value={`${formatTime(appointment.startTime)} às ${formatTime(
+                      appointment.endTime
+                    )}`}
+                  />
+
+                  <Info label="Idade" value={`${appointment.childAge} anos`} />
+                </div>
+
+                {appointment.notes && (
+                  <div className="rounded-2xl bg-[#F7F3EA] p-4 text-sm leading-6 text-[#333333]/70">
+                    <strong>Observações:</strong> {appointment.notes}
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-2 border-t border-[#3E8E91]/10 pt-5">
                   <StatusButton
                     label="Compareceu"
                     icon="check"
@@ -297,7 +343,7 @@ export function AdminAppointments() {
                   />
 
                   <StatusButton
-                    label="Concluir"
+                    label="Concluído"
                     icon="check"
                     loading={actionLoadingId === appointment.id}
                     onClick={() => updateStatus(appointment.id, "COMPLETED")}
@@ -310,6 +356,22 @@ export function AdminAppointments() {
                     danger
                     onClick={() => updateStatus(appointment.id, "CANCELLED")}
                   />
+
+                  {canHideFromAdminHistory(appointment.status) && (
+                    <button
+                      type="button"
+                      onClick={() => handleHideFromAdminHistory(appointment.id)}
+                      disabled={actionLoadingId === appointment.id}
+                      className="inline-flex items-center justify-center gap-2 rounded-full border border-[#333333]/20 px-4 py-2 text-sm font-semibold text-[#333333]/70 transition hover:bg-[#333333] hover:text-white disabled:opacity-60"
+                    >
+                      {actionLoadingId === appointment.id ? (
+                        <Loader2 className="animate-spin" size={16} />
+                      ) : (
+                        <Trash2 size={16} />
+                      )}
+                      Remover do histórico
+                    </button>
+                  )}
                 </div>
               </div>
             </article>
@@ -385,4 +447,22 @@ function translateStatus(status: string) {
   };
 
   return statusMap[status] || status;
+}
+
+function getStatusClass(status: string) {
+  const statusClassMap: Record<string, string> = {
+    PENDING: "bg-gray-50 text-gray-700",
+    CONFIRMED: "bg-blue-50 text-blue-700",
+    RESCHEDULED: "bg-purple-50 text-purple-700",
+    CANCELLED: "bg-red-50 text-red-700",
+    ATTENDED: "bg-green-50 text-green-700",
+    MISSED: "bg-yellow-50 text-yellow-700",
+    COMPLETED: "bg-[#3E8E91]/10 text-[#3E8E91]",
+  };
+
+  return statusClassMap[status] || "bg-gray-50 text-gray-700";
+}
+
+function canHideFromAdminHistory(status: string) {
+  return status === "CANCELLED" || status === "MISSED" || status === "COMPLETED";
 }

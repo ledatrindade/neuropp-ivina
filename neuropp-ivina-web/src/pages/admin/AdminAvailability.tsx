@@ -1,7 +1,5 @@
-import { FormEvent, useMemo, useState } from "react";
-import { Link } from "react-router";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
-  ArrowLeft,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
@@ -14,6 +12,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "../../services/api";
 import { getAuthToken } from "../../services/authStorage";
+import { BackButton } from "../../components/ui/BackButton";
 import type { AvailabilitySlot } from "../../types/availability";
 
 type CalendarDay = {
@@ -52,6 +51,10 @@ export function AdminAvailability() {
     return buildCalendarDays(currentMonth, selectedDate);
   }, [currentMonth, selectedDate]);
 
+  useEffect(() => {
+    loadSlotsByDate(selectedDate);
+  }, [selectedDate]);
+
   async function loadSlotsByDate(date: string) {
     const token = getAuthToken();
 
@@ -63,13 +66,10 @@ export function AdminAvailability() {
     try {
       setIsLoading(true);
       setErrorMessage("");
-      setSuccessMessage("");
 
       const response = await apiRequest<AvailabilitySlot[]>(
         `/admin/availability?date=${date}`,
-        {
-          token,
-        }
+        { token }
       );
 
       setSlots(response);
@@ -86,17 +86,13 @@ export function AdminAvailability() {
   }
 
   function handleSelectDay(day: CalendarDay) {
-    if (day.isPast) {
-      return;
-    }
+    if (day.isPast) return;
 
     setSelectedDate(day.isoDate);
 
     if (!day.isCurrentMonth) {
       setCurrentMonth(new Date(day.date.getFullYear(), day.date.getMonth(), 1));
     }
-
-    loadSlotsByDate(day.isoDate);
   }
 
   async function handleCreateSlot(event: FormEvent<HTMLFormElement>) {
@@ -190,9 +186,7 @@ export function AdminAvailability() {
       "Deseja excluir este horário? Essa ação não poderá ser desfeita."
     );
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     try {
       setActionLoadingId(slotId);
@@ -243,20 +237,16 @@ export function AdminAvailability() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-5 py-10">
-      <Link
-        to="/admin"
-        className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#3E8E91]/20 px-4 py-2 text-sm font-semibold text-[#3E8E91] transition hover:bg-[#3E8E91] hover:text-white"
-      >
-        <ArrowLeft size={18} />
-        Voltar para o painel
-      </Link>
+    <main className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <BackButton to="/admin" label="Voltar para o painel" className="mb-0" />
 
-      <section className="mb-8">
-        <span className="mb-4 inline-flex rounded-full bg-[#3E8E91]/10 px-4 py-2 text-sm font-semibold text-[#3E8E91]">
+        <span className="inline-flex w-fit rounded-full bg-[#3E8E91]/10 px-4 py-2 text-sm font-semibold text-[#3E8E91]">
           Painel administrativo
         </span>
+      </div>
 
+      <section className="mb-8">
         <h1 className="text-4xl font-bold text-[#3E8E91]">
           Gerenciar horários
         </h1>
@@ -409,75 +399,77 @@ export function AdminAvailability() {
               Horários cadastrados
             </h3>
 
-            {isLoading && (
-              <div className="rounded-2xl bg-[#F7F3EA] p-5 text-center text-[#333333]/70">
-                Carregando...
-              </div>
-            )}
+            <div className="max-h-[420px] space-y-3 overflow-y-auto pr-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-[#3E8E91]/30">
+              {isLoading && (
+                <div className="rounded-2xl bg-[#F7F3EA] p-5 text-center text-[#333333]/70">
+                  Carregando...
+                </div>
+              )}
 
-            {!isLoading && slots.length === 0 && (
-              <div className="rounded-2xl bg-[#F7F3EA] p-5 text-center text-[#333333]/70">
-                Nenhum horário cadastrado para este dia.
-              </div>
-            )}
+              {!isLoading && slots.length === 0 && (
+                <div className="rounded-2xl bg-[#F7F3EA] p-5 text-center text-[#333333]/70">
+                  Nenhum horário cadastrado para este dia.
+                </div>
+              )}
 
-            <div className="space-y-3">
-              {slots.map((slot) => (
-                <article
-                  key={slot.id}
-                  className="rounded-2xl border border-[#3E8E91]/10 bg-[#F7F3EA] p-4"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-bold text-[#333333]">
-                        {formatTime(slot.startTime)} às {formatTime(slot.endTime)}
-                      </p>
+              {!isLoading &&
+                slots.map((slot) => (
+                  <article
+                    key={slot.id}
+                    className="rounded-2xl border border-[#3E8E91]/10 bg-[#F7F3EA] p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-bold text-[#333333]">
+                          {formatTime(slot.startTime)} às{" "}
+                          {formatTime(slot.endTime)}
+                        </p>
 
-                      <span
-                        className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-bold ${getStatusClass(
-                          slot
-                        )}`}
-                      >
-                        {getStatusLabel(slot)}
-                      </span>
-                    </div>
-
-                    <div className="flex gap-2">
-                      {slot.isBlocked ? (
-                        <button
-                          type="button"
-                          onClick={() => handleSlotAction(slot.id, "unblock")}
-                          disabled={actionLoadingId === slot.id}
-                          className="rounded-full bg-white p-2 text-[#3E8E91] transition hover:bg-[#3E8E91] hover:text-white disabled:opacity-40"
-                          title="Desbloquear"
+                        <span
+                          className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-bold ${getStatusClass(
+                            slot
+                          )}`}
                         >
-                          <Unlock size={18} />
-                        </button>
-                      ) : (
+                          {getStatusLabel(slot)}
+                        </span>
+                      </div>
+
+                      <div className="flex gap-2">
+                        {slot.isBlocked ? (
+                          <button
+                            type="button"
+                            onClick={() => handleSlotAction(slot.id, "unblock")}
+                            disabled={actionLoadingId === slot.id}
+                            className="rounded-full bg-white p-2 text-[#3E8E91] transition hover:bg-[#3E8E91] hover:text-white disabled:opacity-40"
+                            title="Desbloquear"
+                          >
+                            <Unlock size={18} />
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleSlotAction(slot.id, "block")}
+                            disabled={actionLoadingId === slot.id || !slot.isAvailable}
+                            className="rounded-full bg-white p-2 text-[#3E8E91] transition hover:bg-[#3E8E91] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                            title="Bloquear"
+                          >
+                            <Lock size={18} />
+                          </button>
+                        )}
+
                         <button
                           type="button"
-                          onClick={() => handleSlotAction(slot.id, "block")}
+                          onClick={() => handleDeleteSlot(slot.id)}
                           disabled={actionLoadingId === slot.id || !slot.isAvailable}
-                          className="rounded-full bg-white p-2 text-[#3E8E91] transition hover:bg-[#3E8E91] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
-                          title="Bloquear"
+                          className="rounded-full bg-white p-2 text-[#E84545] transition hover:bg-[#E84545] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                          title="Excluir"
                         >
-                          <Lock size={18} />
+                          <Trash2 size={18} />
                         </button>
-                      )}
-
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteSlot(slot.id)}
-                        disabled={actionLoadingId === slot.id || !slot.isAvailable}
-                        className="rounded-full bg-white p-2 text-[#E84545] transition hover:bg-[#E84545] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
-                        title="Excluir"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      </div>
                     </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                ))}
             </div>
           </div>
         </aside>
@@ -497,11 +489,11 @@ function buildCalendarDays(
   const firstWeekDay = firstDayOfMonth.getDay();
 
   const startDate = new Date(year, month, 1 - firstWeekDay);
-
   const days: CalendarDay[] = [];
 
   for (let index = 0; index < 42; index++) {
     const date = new Date(startDate);
+
     date.setDate(startDate.getDate() + index);
 
     const isoDate = formatDateToIso(date);

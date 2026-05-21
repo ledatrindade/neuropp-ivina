@@ -36,7 +36,6 @@ export function ConfirmAppointment() {
     }
 
     const slot = getSelectedSlot();
-
     setSelectedSlot(slot);
   }, [navigate]);
 
@@ -68,6 +67,30 @@ export function ConfirmAppointment() {
     try {
       setIsLoading(true);
       setErrorMessage("");
+
+      /*
+       * Antes de confirmar, verificamos se o horário ainda está disponível.
+       * Isso evita que duas pessoas confirmem o mesmo horário ao mesmo tempo.
+       */
+      const availableSlots = await apiRequest<AvailabilitySlot[]>(
+        `/availability?date=${selectedSlot.date}`
+      );
+
+      const slotStillAvailable = availableSlots.some(
+        (slot) =>
+          slot.id === selectedSlot.id &&
+          slot.isAvailable &&
+          !slot.isBlocked
+      );
+
+      if (!slotStillAvailable) {
+        setErrorMessage(
+          "Esse horário acabou de ser preenchido por outra pessoa. Volte ao calendário e escolha outro horário."
+        );
+        clearSelectedSlot();
+        setSelectedSlot(null);
+        return;
+      }
 
       const child = await apiRequest<ChildResponse>("/children/my", {
         method: "POST",
@@ -160,7 +183,10 @@ export function ConfirmAppointment() {
           </div>
 
           <div className="mt-8 grid gap-4 md:grid-cols-2">
-            <InfoCard label="Responsável" value={createdAppointment.responsibleName} />
+            <InfoCard
+              label="Responsável"
+              value={createdAppointment.responsibleName}
+            />
             <InfoCard label="Criança" value={createdAppointment.childName} />
             <InfoCard label="Data" value={createdAppointment.date} />
             <InfoCard
