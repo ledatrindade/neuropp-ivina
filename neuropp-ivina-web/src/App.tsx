@@ -6,6 +6,8 @@ import { About } from "./pages/public/About";
 import { Assessment } from "./pages/public/Assessment";
 import { Contact } from "./pages/public/Contact";
 import { Schedule } from "./pages/public/Schedule";
+import { Login } from "./pages/auth/Login";
+import { Register } from "./pages/auth/Register";
 
 function App() {
   return (
@@ -18,6 +20,9 @@ function App() {
         <Route path="/avaliacao" element={<Assessment />} />
         <Route path="/contato" element={<Contact />} />
         <Route path="/agendar" element={<Schedule />} />
+
+        <Route path="/login" element={<Login />} />
+        <Route path="/cadastro" element={<Register />} />
       </Routes>
 
       <Footer />
