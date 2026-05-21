@@ -1,5 +1,5 @@
 import { FormEvent, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { LogIn, Loader2 } from "lucide-react";
 import { apiRequest } from "../../services/api";
 import { saveAuthUser } from "../../services/authStorage";
@@ -7,13 +7,17 @@ import type { LoginResponse } from "../../types/auth";
 
 export function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const redirectParam = new URLSearchParams(location.search).get("redirect");
+
+  const safeRedirect =
+    redirectParam && redirectParam.startsWith("/") ? redirectParam : "/agendar";
 
   const [email, setEmail] = useState("");
-
   const [password, setPassword] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
-
   const [errorMessage, setErrorMessage] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -33,17 +37,12 @@ export function Login() {
 
       saveAuthUser(response);
 
-      /*
-       * Depois vamos melhorar o redirecionamento:
-       * - responsável vai para confirmação de agendamento;
-       * - admin vai para painel administrativo.
-       */
       if (response.role === "ADMIN") {
         navigate("/admin");
         return;
       }
 
-      navigate("/agendar");
+      navigate(safeRedirect);
     } catch (error) {
       const message =
         error instanceof Error

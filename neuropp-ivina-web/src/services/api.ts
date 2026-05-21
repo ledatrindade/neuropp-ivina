@@ -1,7 +1,6 @@
 /*
  * Arquivo central para comunicação com a API Java.
  *
- * Durante o desenvolvimento:
  * Front-end: http://localhost:5173
  * Back-end:  http://localhost:8080
  */
