@@ -2,11 +2,8 @@ import { useEffect, useState } from "react";
 import { FileText, Loader2 } from "lucide-react";
 import { apiRequest } from "../../services/api";
 import { getAuthToken } from "../../services/authStorage";
+import { BackButton } from "../../components/ui/BackButton";
 import type { AttendanceDocumentResponse } from "../../types/document";
-
-/*
- * Página de documentos liberados para o responsável.
- */
 
 export function MyDocuments() {
   const [documents, setDocuments] = useState<AttendanceDocumentResponse[]>([]);
@@ -54,19 +51,17 @@ export function MyDocuments() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-5 py-12">
-      <section className="mb-8">
-        <span className="mb-4 inline-flex rounded-full bg-[#3E8E91]/10 px-4 py-2 text-sm font-semibold text-[#3E8E91]">
-          Área do responsável
-        </span>
+    <main className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10">
+      <BackButton to="/responsavel" />
 
+      <section className="mb-8">
         <h1 className="text-4xl font-bold text-[#3E8E91]">
           Documentos liberados
         </h1>
 
         <p className="mt-4 max-w-3xl text-lg leading-8 text-[#333333]/75">
-          Aqui aparecerão documentos privados liberados pela profissional após
-          avaliação, sessão ou devolutiva.
+          Aqui ficam documentos privados liberados por Ivina após avaliação,
+          sessão ou devolutiva.
         </p>
       </section>
 
@@ -79,9 +74,7 @@ export function MyDocuments() {
       {isLoading && (
         <div className="rounded-3xl bg-white p-8 text-center shadow-sm">
           <Loader2 className="mx-auto animate-spin text-[#3E8E91]" size={34} />
-          <p className="mt-4 text-[#333333]/70">
-            Carregando documentos...
-          </p>
+          <p className="mt-4 text-[#333333]/70">Carregando documentos...</p>
         </div>
       )}
 
@@ -147,7 +140,7 @@ export function MyDocuments() {
                   Criança: {selectedDocument.childName}
                 </p>
 
-                <div className="mt-6 rounded-2xl bg-[#F7F3EA] p-5 leading-8 text-[#333333]/75 whitespace-pre-line">
+                <div className="mt-6 whitespace-pre-line rounded-2xl bg-[#F7F3EA] p-5 leading-8 text-[#333333]/75">
                   {selectedDocument.content || "Documento sem conteúdo textual."}
                 </div>
 

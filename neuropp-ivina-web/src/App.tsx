@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router";
+import { Route, Routes, useLocation } from "react-router";
 import { Header } from "./components/layout/Header";
 import { Footer } from "./components/layout/Footer";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -24,110 +24,96 @@ import { AdminAppointments } from "./pages/admin/AdminAppointments";
 import { AdminDocuments } from "./pages/admin/AdminDocuments";
 
 function App() {
+  const location = useLocation();
+
   return (
-    <div className="min-h-screen bg-[#F7F3EA]">
+    <div className="flex min-h-screen flex-col bg-[#F7F3EA]">
       <Header />
 
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/sobre" element={<About />} />
-        <Route path="/avaliacao" element={<Assessment />} />
-        <Route path="/contato" element={<Contact />} />
-        <Route path="/agendar" element={<Schedule />} />
+      <div key={location.pathname} className="page-transition flex-1">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/sobre" element={<About />} />
+          <Route path="/avaliacao" element={<Assessment />} />
+          <Route path="/contato" element={<Contact />} />
+          <Route path="/agendar" element={<Schedule />} />
 
-        <Route path="/login" element={<Login />} />
-        <Route path="/cadastro" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/cadastro" element={<Register />} />
 
-        <Route
-          path="/confirmar-agendamento"
-          element={
-            <ProtectedRoute>
-              <ConfirmAppointment />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/confirmar-agendamento"
+            element={
+              <ProtectedRoute>
+                <ConfirmAppointment />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/responsavel"
-          element={
-            <ProtectedRoute>
-              <ResponsibleDashboard />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/responsavel"
+            element={
+              <ProtectedRoute>
+                <ResponsibleDashboard />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/responsavel/agendamentos"
-          element={
-            <ProtectedRoute>
-              <MyAppointments />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/responsavel/agendamentos"
+            element={
+              <ProtectedRoute>
+                <MyAppointments />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/responsavel/documentos"
-          element={
-            <ProtectedRoute>
-              <MyDocuments />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/responsavel/documentos"
+            element={
+              <ProtectedRoute>
+                <MyDocuments />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/admin"
-          element={
-            <AdminRoute>
-              <AdminDashboard />
-            </AdminRoute>
-          }
-        />
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
 
-        <Route
-          path="/admin/horarios"
-          element={
-            <AdminRoute>
-              <AdminAvailability />
-            </AdminRoute>
-          }
-        />
-                
-        <Route
-          path="/admin"
-          element={
-            <AdminRoute>
-              <AdminDashboard />
-            </AdminRoute>
-          }
-        />
+          <Route
+            path="/admin/horarios"
+            element={
+              <AdminRoute>
+                <AdminAvailability />
+              </AdminRoute>
+            }
+          />
 
-        <Route
-          path="/admin/horarios"
-          element={
-            <AdminRoute>
-              <AdminAvailability />
-            </AdminRoute>
-          }
-        />
+          <Route
+            path="/admin/agendamentos"
+            element={
+              <AdminRoute>
+                <AdminAppointments />
+              </AdminRoute>
+            }
+          />
 
-        <Route
-          path="/admin/agendamentos"
-          element={
-            <AdminRoute>
-              <AdminAppointments />
-            </AdminRoute>
-          }
-        />
-
-        <Route
-          path="/admin/documentos"
-          element={
-            <AdminRoute>
-              <AdminDocuments />
-            </AdminRoute>
-          }
-        />
-      </Routes>
+          <Route
+            path="/admin/documentos"
+            element={
+              <AdminRoute>
+                <AdminDocuments />
+              </AdminRoute>
+            }
+          />
+        </Routes>
+      </div>
 
       <Footer />
     </div>
