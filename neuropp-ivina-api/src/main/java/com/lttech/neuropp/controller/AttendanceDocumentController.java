@@ -1,21 +1,14 @@
 package com.lttech.neuropp.controller;
 
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.lttech.neuropp.dto.AttendanceDocumentResponse;
 import com.lttech.neuropp.dto.CreateAttendanceDocumentRequest;
+import com.lttech.neuropp.security.AuthenticatedUserService;
 import com.lttech.neuropp.service.AttendanceDocumentService;
-
 import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
 
 /*
  * Controller dos documentos privados.
@@ -25,9 +18,14 @@ import jakarta.validation.Valid;
 public class AttendanceDocumentController {
 
     private final AttendanceDocumentService attendanceDocumentService;
+    private final AuthenticatedUserService authenticatedUserService;
 
-    public AttendanceDocumentController(AttendanceDocumentService attendanceDocumentService) {
+    public AttendanceDocumentController(
+            AttendanceDocumentService attendanceDocumentService,
+            AuthenticatedUserService authenticatedUserService
+    ) {
         this.attendanceDocumentService = attendanceDocumentService;
+        this.authenticatedUserService = authenticatedUserService;
     }
 
     /*
@@ -77,27 +75,28 @@ public class AttendanceDocumentController {
     }
 
     /*
-     * Responsável lista os documentos liberados para ele.
+     * Responsável logado lista documentos liberados para ele.
      *
-     * GET http://localhost:8080/api/responsibles/{responsibleId}/documents
+     * GET http://localhost:8080/api/documents/my
      */
-    @GetMapping("/responsibles/{responsibleId}/documents")
-    public List<AttendanceDocumentResponse> listReleasedDocumentsByResponsible(
-            @PathVariable UUID responsibleId
-    ) {
+    @GetMapping("/documents/my")
+    public List<AttendanceDocumentResponse> listMyReleasedDocuments() {
+        UUID responsibleId = authenticatedUserService.getAuthenticatedUserId();
+
         return attendanceDocumentService.listReleasedDocumentsByResponsible(responsibleId);
     }
 
     /*
-     * Responsável visualiza um documento liberado específico.
+     * Responsável logado visualiza um documento liberado específico.
      *
-     * GET http://localhost:8080/api/responsibles/{responsibleId}/documents/{documentId}
+     * GET http://localhost:8080/api/documents/my/{documentId}
      */
-    @GetMapping("/responsibles/{responsibleId}/documents/{documentId}")
-    public AttendanceDocumentResponse getReleasedDocumentForResponsible(
-            @PathVariable UUID responsibleId,
+    @GetMapping("/documents/my/{documentId}")
+    public AttendanceDocumentResponse getMyReleasedDocument(
             @PathVariable UUID documentId
     ) {
+        UUID responsibleId = authenticatedUserService.getAuthenticatedUserId();
+
         return attendanceDocumentService.getReleasedDocumentForResponsible(responsibleId, documentId);
     }
 }
