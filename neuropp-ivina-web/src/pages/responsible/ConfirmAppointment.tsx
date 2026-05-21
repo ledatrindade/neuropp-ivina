@@ -7,6 +7,7 @@ import {
   clearSelectedSlot,
   getSelectedSlot,
 } from "../../services/appointmentStorage";
+import { BackButton } from "../../components/ui/BackButton";
 import type { AvailabilitySlot } from "../../types/availability";
 import type { ChildResponse } from "../../types/child";
 import type { AppointmentResponse } from "../../types/appointment";
@@ -186,10 +187,10 @@ export function ConfirmAppointment() {
             </Link>
 
             <Link
-              to="/"
+              to="/responsavel"
               className="inline-flex justify-center rounded-full bg-[#E84545] px-6 py-3 font-semibold text-white transition hover:brightness-95"
             >
-              Voltar para início
+              Ir para minha área
             </Link>
           </div>
         </section>
@@ -198,12 +199,10 @@ export function ConfirmAppointment() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-5 py-12">
-      <section className="mb-8">
-        <span className="mb-4 inline-flex rounded-full bg-[#3E8E91]/10 px-4 py-2 text-sm font-semibold text-[#3E8E91]">
-          Confirmação
-        </span>
+    <main className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10">
+      <BackButton to="/agendar" />
 
+      <section className="mb-8">
         <h1 className="text-4xl font-bold text-[#3E8E91] md:text-5xl">
           Confirmar avaliação
         </h1>
@@ -225,9 +224,7 @@ export function ConfirmAppointment() {
             </span>
 
             <div>
-              <h2 className="font-bold text-[#333333]">
-                {selectedSlot?.date}
-              </h2>
+              <h2 className="font-bold text-[#333333]">{selectedSlot?.date}</h2>
 
               <p className="text-sm text-[#333333]/70">
                 {selectedSlot

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, NavLink, useLocation } from "react-router";
 import {
   CalendarDays,
   FileText,
@@ -58,9 +58,9 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#3E8E91]/10 bg-[#F7F3EA]/95 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-        <Link to={homePath} className="flex flex-col">
+    <header className="sticky top-0 z-50 w-full border-b border-[#3E8E91]/10 bg-[#F7F3EA]/95 backdrop-blur">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-4 md:px-8">
+        <Link to={homePath} className="flex min-w-fit flex-col">
           <span className="text-lg font-bold text-[#3E8E91]">
             {siteContent.brand.name}
           </span>
@@ -71,69 +71,49 @@ export function Header() {
         </Link>
 
         {!isUserArea && (
-          <nav className="hidden items-center gap-6 text-sm font-medium text-[#333333] md:flex">
-            <Link className="hover:text-[#3E8E91]" to="/">
-              Início
-            </Link>
-            <Link className="hover:text-[#3E8E91]" to="/sobre">
-              Sobre
-            </Link>
-            <Link className="hover:text-[#3E8E91]" to="/avaliacao">
-              Avaliação
-            </Link>
-            <Link className="hover:text-[#3E8E91]" to="/contato">
-              Contato
-            </Link>
+          <nav className="hidden flex-1 items-center justify-center gap-2 text-sm font-medium text-[#333333] md:flex">
+            <PublicNavLink to="/">Início</PublicNavLink>
+            <PublicNavLink to="/sobre">Sobre</PublicNavLink>
+            <PublicNavLink to="/avaliacao">Avaliação</PublicNavLink>
+            <PublicNavLink to="/contato">Contato</PublicNavLink>
           </nav>
         )}
 
         {isResponsibleArea && (
-          <nav className="hidden items-center gap-5 text-sm font-medium text-[#333333] md:flex">
-            <Link className="hover:text-[#3E8E91]" to="/responsavel">
-              Minha área
-            </Link>
-
-            <Link
-              className="hover:text-[#3E8E91]"
-              to="/responsavel/agendamentos"
-            >
+          <nav className="hidden flex-1 items-center justify-center gap-2 text-sm font-medium text-[#333333] md:flex">
+            <AreaNavLink to="/responsavel">Minha área</AreaNavLink>
+            <AreaNavLink to="/responsavel/agendamentos">
               Agendamentos
-            </Link>
-
-            <Link className="hover:text-[#3E8E91]" to="/responsavel/documentos">
-              Documentos
-            </Link>
-
-            <Link className="hover:text-[#3E8E91]" to="/agendar">
-              Marcar avaliação
-            </Link>
+            </AreaNavLink>
+            <AreaNavLink to="/responsavel/documentos">Documentos</AreaNavLink>
+            <AreaNavLink to="/agendar">Marcar avaliação</AreaNavLink>
           </nav>
         )}
 
-        
         {isAdminArea && (
-        <nav className="hidden items-center gap-5 text-sm font-medium text-[#333333] md:flex">
-            <Link className="hover:text-[#3E8E91]" to="/admin">
-            Painel
-            </Link>
-
-            <Link className="hover:text-[#3E8E91]" to="/admin/horarios">
-            Horários
-            </Link>
-
-            <Link className="hover:text-[#3E8E91]" to="/admin/agendamentos">
-            Agendamentos
-            </Link>
-
-            <Link className="hover:text-[#3E8E91]" to="/admin/documentos">
-            Documentos
-            </Link>
-        </nav>
+          <nav className="hidden flex-1 items-center justify-center gap-2 text-sm font-medium text-[#333333] md:flex">
+            <AreaNavLink to="/admin">Painel</AreaNavLink>
+            <AreaNavLink to="/admin/horarios">Horários</AreaNavLink>
+            <AreaNavLink to="/admin/agendamentos">Agendamentos</AreaNavLink>
+            <AreaNavLink to="/admin/documentos">Documentos</AreaNavLink>
+          </nav>
         )}
 
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-fit items-center gap-2">
           {authUser ? (
             <>
+              {isAdminArea && (
+                <span className="hidden rounded-full bg-[#3E8E91]/10 px-4 py-2 text-sm font-semibold text-[#3E8E91] lg:inline-flex">
+                  Área admin
+                </span>
+              )}
+
+              {isResponsibleArea && (
+                <span className="hidden rounded-full bg-[#3E8E91]/10 px-4 py-2 text-sm font-semibold text-[#3E8E91] lg:inline-flex">
+                  Área do responsável
+                </span>
+              )}
+
               {isAdmin && !isAdminArea && (
                 <Link
                   to="/admin"
@@ -196,7 +176,7 @@ export function Header() {
           {authUser && !isAdminArea && !isResponsibleArea && (
             <Link
               to="/agendar"
-              className="inline-flex items-center gap-2 rounded-full bg-[#E84545] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
+              className="hidden items-center gap-2 rounded-full bg-[#E84545] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-95 sm:inline-flex"
             >
               <CalendarDays size={18} />
               Marcar avaliação
@@ -205,5 +185,46 @@ export function Header() {
         </div>
       </div>
     </header>
+  );
+}
+
+type NavLinkProps = {
+  to: string;
+  children: string;
+};
+
+function PublicNavLink({ to, children }: NavLinkProps) {
+  return (
+    <NavLink
+      to={to}
+      end={to === "/"}
+      className={({ isActive }) =>
+        `rounded-full px-4 py-2 transition ${
+          isActive
+            ? "bg-[#3E8E91] text-white"
+            : "text-[#333333] hover:bg-[#3E8E91]/10 hover:text-[#3E8E91]"
+        }`
+      }
+    >
+      {children}
+    </NavLink>
+  );
+}
+
+function AreaNavLink({ to, children }: NavLinkProps) {
+  return (
+    <NavLink
+      to={to}
+      end
+      className={({ isActive }) =>
+        `rounded-full px-4 py-2 transition ${
+          isActive
+            ? "bg-[#3E8E91] text-white"
+            : "text-[#333333] hover:bg-[#3E8E91]/10 hover:text-[#3E8E91]"
+        }`
+      }
+    >
+      {children}
+    </NavLink>
   );
 }

@@ -3,9 +3,9 @@ import { Navigate, useLocation } from "react-router";
 import { isAuthenticated } from "../../services/authStorage";
 
 /*
- * Componente usado para proteger páginas.
+ * Protege páginas que só usuários logados podem acessar.
  *
- * Se o usuário não estiver logado, ele é enviado para login.
+ * Se o usuário não estiver logado, ele é enviado para /login.
  */
 
 type ProtectedRouteProps = {
@@ -16,12 +16,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const location = useLocation();
 
   if (!isAuthenticated()) {
-    return (
-      <Navigate
-        to={`/login?redirect=${location.pathname}`}
-        replace
-      />
-    );
+    return <Navigate to={`/login?redirect=${location.pathname}`} replace />;
   }
 
   return children;

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
+import { BackButton } from "../../components/ui/BackButton";
 import {
   CalendarDays,
   ChevronLeft,
@@ -143,11 +144,15 @@ export function Schedule() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 md:px-5 md:py-10">
-      <section className="mb-8">
-        <span className="mb-4 inline-flex rounded-full bg-[#3E8E91]/10 px-4 py-2 text-sm font-semibold text-[#3E8E91]">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <BackButton to={isAuthenticated() ? "/responsavel" : "/"} />
+
+        <span className="inline-flex w-fit rounded-full bg-[#3E8E91]/10 px-4 py-2 text-sm font-semibold text-[#3E8E91]">
           Agendamento online
         </span>
+      </div>
 
+      <section className="mb-8">
         <h1 className="text-4xl font-bold text-[#3E8E91] md:text-5xl">
           {siteContent.schedule.title}
         </h1>
