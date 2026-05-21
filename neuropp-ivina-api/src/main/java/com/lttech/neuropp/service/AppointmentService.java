@@ -45,15 +45,8 @@ public class AppointmentService {
         this.availabilitySlotRepository = availabilitySlotRepository;
     }
 
-    /*
-     * Método antigo: cria agendamento recebendo responsibleId.
-     *
-     * Pode ser útil futuramente para admin, mas o responsável deve usar
-     * createAppointmentForResponsible().
-     */
     @Transactional
     public AppointmentResponse createAppointment(CreateAppointmentRequest request) {
-
         User responsible = userRepository.findById(request.getResponsibleId())
                 .orElseThrow(() -> new IllegalArgumentException("Responsável não encontrado."));
 
@@ -77,6 +70,8 @@ public class AppointmentService {
                 .status(AppointmentStatus.CONFIRMED)
                 .notes(request.getNotes())
                 .attended(false)
+                .hiddenForResponsible(false)
+                .hiddenForAdmin(false)
                 .build();
 
         Appointment savedAppointment = appointmentRepository.save(appointment);
@@ -87,11 +82,6 @@ public class AppointmentService {
         return AppointmentResponse.fromEntity(savedAppointment);
     }
 
-    /*
-     * Novo método seguro.
-     *
-     * O responsibleId vem do token do usuário logado.
-     */
     @Transactional
     public AppointmentResponse createAppointmentForResponsible(
             UUID responsibleId,
@@ -120,13 +110,12 @@ public class AppointmentService {
                 .status(AppointmentStatus.CONFIRMED)
                 .notes(request.getNotes())
                 .attended(false)
+                .hiddenForResponsible(false)
+                .hiddenForAdmin(false)
                 .build();
 
         Appointment savedAppointment = appointmentRepository.save(appointment);
 
-        /*
-         * Bloqueio automático do horário.
-         */
         slot.setIsAvailable(false);
         availabilitySlotRepository.save(slot);
 
@@ -134,35 +123,31 @@ public class AppointmentService {
     }
 
     /*
-     * Lista todos os agendamentos para o painel administrativo.
+     * Admin lista todos os agendamentos que não foram ocultados do histórico administrativo.
      */
     @Transactional(readOnly = true)
     public List<AppointmentResponse> listAllAppointmentsForAdmin() {
         return appointmentRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
+                .filter(appointment -> !Boolean.TRUE.equals(appointment.getHiddenForAdmin()))
                 .map(AppointmentResponse::fromEntity)
                 .toList();
     }
 
     /*
-     * Lista agendamentos de um responsável.
+     * Responsável lista seus agendamentos não ocultos.
      */
     @Transactional(readOnly = true)
     public List<AppointmentResponse> listAppointmentsByResponsible(UUID responsibleId) {
         return appointmentRepository.findByResponsibleIdOrderByCreatedAtDesc(responsibleId)
                 .stream()
+                .filter(appointment -> !Boolean.TRUE.equals(appointment.getHiddenForResponsible()))
                 .map(AppointmentResponse::fromEntity)
                 .toList();
     }
 
-    /*
-     * Cancelamento antigo por ID.
-     *
-     * Usado internamente depois da validação do dono do agendamento.
-     */
     @Transactional
     public AppointmentResponse cancelAppointment(UUID appointmentId) {
-
         Appointment appointment = findAppointmentById(appointmentId);
 
         if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
@@ -198,9 +183,6 @@ public class AppointmentService {
         return AppointmentResponse.fromEntity(savedAppointment);
     }
 
-    /*
-     * Cancelamento seguro feito pelo responsável logado.
-     */
     @Transactional
     public AppointmentResponse cancelAppointmentForResponsible(
             UUID responsibleId,
@@ -213,11 +195,6 @@ public class AppointmentService {
         return cancelAppointment(appointmentId);
     }
 
-    /*
-     * Reagendamento antigo por ID.
-     *
-     * Usado internamente depois da validação do dono do agendamento.
-     */
     @Transactional
     public AppointmentResponse rescheduleAppointment(
             UUID appointmentId,
@@ -262,9 +239,6 @@ public class AppointmentService {
         return AppointmentResponse.fromEntity(savedAppointment);
     }
 
-    /*
-     * Reagendamento seguro feito pelo responsável logado.
-     */
     @Transactional
     public AppointmentResponse rescheduleAppointmentForResponsible(
             UUID responsibleId,
@@ -278,9 +252,6 @@ public class AppointmentService {
         return rescheduleAppointment(appointmentId, request);
     }
 
-    /*
-     * Atualização de status feita pela admin.
-     */
     @Transactional
     public AppointmentResponse updateAppointmentStatus(
             UUID appointmentId,
@@ -313,6 +284,44 @@ public class AppointmentService {
         Appointment savedAppointment = appointmentRepository.save(appointment);
 
         return AppointmentResponse.fromEntity(savedAppointment);
+    }
+
+    /*
+     * Responsável oculta agendamento da própria área.
+     */
+    @Transactional
+    public void hideAppointmentForResponsible(UUID responsibleId, UUID appointmentId) {
+        Appointment appointment = findAppointmentById(appointmentId);
+
+        validateAppointmentBelongsToResponsible(appointment, responsibleId);
+
+        appointment.setHiddenForResponsible(true);
+
+        appointmentRepository.save(appointment);
+    }
+
+    /*
+     * Admin remove agendamento do histórico administrativo.
+     *
+     * Por segurança, só permitimos ocultar agendamentos que já não estão ativos.
+     */
+    @Transactional
+    public void hideAppointmentForAdmin(UUID appointmentId) {
+        Appointment appointment = findAppointmentById(appointmentId);
+
+        if (
+                appointment.getStatus() == AppointmentStatus.CONFIRMED ||
+                appointment.getStatus() == AppointmentStatus.RESCHEDULED ||
+                appointment.getStatus() == AppointmentStatus.ATTENDED
+        ) {
+            throw new IllegalArgumentException(
+                    "Só é possível remover do histórico agendamentos cancelados, faltosos ou concluídos."
+            );
+        }
+
+        appointment.setHiddenForAdmin(true);
+
+        appointmentRepository.save(appointment);
     }
 
     private Appointment findAppointmentById(UUID appointmentId) {

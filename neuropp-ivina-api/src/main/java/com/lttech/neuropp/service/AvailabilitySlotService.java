@@ -2,6 +2,7 @@ package com.lttech.neuropp.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -10,8 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.lttech.neuropp.dto.AvailabilitySlotResponse;
 import com.lttech.neuropp.dto.CreateAvailabilitySlotRequest;
 import com.lttech.neuropp.dto.UpdateAvailabilitySlotRequest;
+import com.lttech.neuropp.entity.Appointment;
 import com.lttech.neuropp.entity.AvailabilitySlot;
+import com.lttech.neuropp.enums.AppointmentStatus;
 import com.lttech.neuropp.repository.AppointmentRepository;
+import com.lttech.neuropp.repository.AttendanceDocumentRepository;
 import com.lttech.neuropp.repository.AvailabilitySlotRepository;
 
 /*
@@ -22,13 +26,16 @@ public class AvailabilitySlotService {
 
     private final AvailabilitySlotRepository availabilitySlotRepository;
     private final AppointmentRepository appointmentRepository;
+    private final AttendanceDocumentRepository attendanceDocumentRepository;
 
     public AvailabilitySlotService(
             AvailabilitySlotRepository availabilitySlotRepository,
-            AppointmentRepository appointmentRepository
+            AppointmentRepository appointmentRepository,
+            AttendanceDocumentRepository attendanceDocumentRepository
     ) {
         this.availabilitySlotRepository = availabilitySlotRepository;
         this.appointmentRepository = appointmentRepository;
+        this.attendanceDocumentRepository = attendanceDocumentRepository;
     }
 
     /*
@@ -89,15 +96,18 @@ public class AvailabilitySlotService {
      * Edita data e horário de um slot.
      *
      * Regra:
-     * se o horário já tem agendamento, não pode editar.
+     * se o horário já tem agendamento ativo, não pode editar.
      */
     @Transactional
     public AvailabilitySlotResponse updateSlot(UUID slotId, UpdateAvailabilitySlotRequest request) {
 
         AvailabilitySlot slot = findSlotById(slotId);
 
-        if (appointmentRepository.existsBySlotId(slot.getId())) {
-            throw new IllegalArgumentException("Não é possível editar um horário que já possui agendamento.");
+        Optional<Appointment> appointmentOptional = appointmentRepository.findBySlotId(slot.getId());
+
+        if (appointmentOptional.isPresent()
+                && appointmentOptional.get().getStatus() != AppointmentStatus.CANCELLED) {
+            throw new IllegalArgumentException("Não é possível editar um horário que já possui agendamento ativo.");
         }
 
         validateTimeRange(request.getStartTime(), request.getEndTime());
@@ -124,17 +134,17 @@ public class AvailabilitySlotService {
 
     /*
      * Bloqueia manualmente um horário.
-     *
-     * Exemplo:
-     * Ivina não poderá atender naquele horário.
      */
     @Transactional
     public AvailabilitySlotResponse blockSlot(UUID slotId) {
 
         AvailabilitySlot slot = findSlotById(slotId);
 
-        if (appointmentRepository.existsBySlotId(slot.getId())) {
-            throw new IllegalArgumentException("Não é possível bloquear um horário que já possui agendamento.");
+        Optional<Appointment> appointmentOptional = appointmentRepository.findBySlotId(slot.getId());
+
+        if (appointmentOptional.isPresent()
+                && appointmentOptional.get().getStatus() != AppointmentStatus.CANCELLED) {
+            throw new IllegalArgumentException("Não é possível bloquear um horário que já possui agendamento ativo.");
         }
 
         slot.setIsBlocked(true);
@@ -153,8 +163,11 @@ public class AvailabilitySlotService {
 
         AvailabilitySlot slot = findSlotById(slotId);
 
-        if (appointmentRepository.existsBySlotId(slot.getId())) {
-            throw new IllegalArgumentException("Não é possível desbloquear um horário que já possui agendamento.");
+        Optional<Appointment> appointmentOptional = appointmentRepository.findBySlotId(slot.getId());
+
+        if (appointmentOptional.isPresent()
+                && appointmentOptional.get().getStatus() != AppointmentStatus.CANCELLED) {
+            throw new IllegalArgumentException("Não é possível desbloquear um horário que já possui agendamento ativo.");
         }
 
         slot.setIsBlocked(false);
@@ -169,31 +182,42 @@ public class AvailabilitySlotService {
      * Exclui um horário.
      *
      * Regra:
-     * só pode excluir horário sem agendamento.
+     * - se não tiver agendamento, exclui normalmente;
+     * - se tiver agendamento cancelado, remove o agendamento cancelado e depois exclui o horário;
+     * - se tiver agendamento ativo/concluído/faltou/compareceu, não exclui.
      */
     @Transactional
     public void deleteSlot(UUID slotId) {
 
         AvailabilitySlot slot = findSlotById(slotId);
 
-        if (appointmentRepository.existsBySlotId(slot.getId())) {
-            throw new IllegalArgumentException("Não é possível excluir um horário que já possui agendamento.");
+        Optional<Appointment> appointmentOptional = appointmentRepository.findBySlotId(slot.getId());
+
+        if (appointmentOptional.isPresent()) {
+            Appointment appointment = appointmentOptional.get();
+
+            if (appointment.getStatus() != AppointmentStatus.CANCELLED) {
+                throw new IllegalArgumentException(
+                        "Não é possível excluir este horário porque ele possui um agendamento ativo ou histórico não cancelado."
+                );
+            }
+
+            /*
+             * Se o agendamento está cancelado, podemos remover o vínculo.
+             * Primeiro removemos documentos relacionados para evitar erro de chave estrangeira.
+             */
+            attendanceDocumentRepository.deleteByAppointmentId(appointment.getId());
+            appointmentRepository.delete(appointment);
         }
 
         availabilitySlotRepository.delete(slot);
     }
 
-    /*
-     * Busca um horário pelo ID.
-     */
     private AvailabilitySlot findSlotById(UUID slotId) {
         return availabilitySlotRepository.findById(slotId)
                 .orElseThrow(() -> new IllegalArgumentException("Horário não encontrado."));
     }
 
-    /*
-     * Valida se o horário final é depois do horário inicial.
-     */
     private void validateTimeRange(java.time.LocalTime startTime, java.time.LocalTime endTime) {
         if (!endTime.isAfter(startTime)) {
             throw new IllegalArgumentException("O horário final precisa ser depois do horário inicial.");

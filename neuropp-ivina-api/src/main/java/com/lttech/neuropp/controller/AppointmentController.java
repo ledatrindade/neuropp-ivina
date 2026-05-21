@@ -3,6 +3,7 @@ package com.lttech.neuropp.controller;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,10 +41,6 @@ public class AppointmentController {
 
     /*
      * Responsável logado cria um agendamento.
-     *
-     * POST http://localhost:8080/api/appointments/my
-     *
-     * O responsável vem do token.
      */
     @PostMapping("/appointments/my")
     public AppointmentResponse createMyAppointment(
@@ -56,8 +53,6 @@ public class AppointmentController {
 
     /*
      * Responsável logado lista seus próprios agendamentos.
-     *
-     * GET http://localhost:8080/api/appointments/my
      */
     @GetMapping("/appointments/my")
     public List<AppointmentResponse> listMyAppointments() {
@@ -68,8 +63,6 @@ public class AppointmentController {
 
     /*
      * Responsável logado cancela seu próprio agendamento.
-     *
-     * PUT http://localhost:8080/api/appointments/my/{appointmentId}/cancel
      */
     @PutMapping("/appointments/my/{appointmentId}/cancel")
     public AppointmentResponse cancelMyAppointment(
@@ -82,8 +75,6 @@ public class AppointmentController {
 
     /*
      * Responsável logado reagenda seu próprio agendamento.
-     *
-     * PUT http://localhost:8080/api/appointments/my/{appointmentId}/reschedule
      */
     @PutMapping("/appointments/my/{appointmentId}/reschedule")
     public AppointmentResponse rescheduleMyAppointment(
@@ -92,13 +83,27 @@ public class AppointmentController {
     ) {
         UUID responsibleId = authenticatedUserService.getAuthenticatedUserId();
 
-        return appointmentService.rescheduleAppointmentForResponsible(responsibleId, appointmentId, request);
+        return appointmentService.rescheduleAppointmentForResponsible(
+                responsibleId,
+                appointmentId,
+                request
+        );
+    }
+
+    /*
+     * Responsável oculta um agendamento do próprio histórico.
+     */
+    @DeleteMapping("/appointments/my/{appointmentId}/history")
+    public void hideMyAppointmentFromHistory(
+            @PathVariable UUID appointmentId
+    ) {
+        UUID responsibleId = authenticatedUserService.getAuthenticatedUserId();
+
+        appointmentService.hideAppointmentForResponsible(responsibleId, appointmentId);
     }
 
     /*
      * Admin lista todos os agendamentos.
-     *
-     * GET http://localhost:8080/api/admin/appointments
      */
     @GetMapping("/admin/appointments")
     public List<AppointmentResponse> listAllAppointmentsForAdmin() {
@@ -107,8 +112,6 @@ public class AppointmentController {
 
     /*
      * Admin atualiza status do agendamento.
-     *
-     * PUT http://localhost:8080/api/admin/appointments/{appointmentId}/status
      */
     @PutMapping("/admin/appointments/{appointmentId}/status")
     public AppointmentResponse updateAppointmentStatus(
@@ -116,5 +119,17 @@ public class AppointmentController {
             @Valid @RequestBody UpdateAppointmentStatusRequest request
     ) {
         return appointmentService.updateAppointmentStatus(appointmentId, request);
+    }
+
+    /*
+     * Admin remove agendamento do histórico administrativo.
+     *
+     * DELETE http://localhost:8080/api/admin/appointments/{appointmentId}/history
+     */
+    @DeleteMapping("/admin/appointments/{appointmentId}/history")
+    public void hideAppointmentFromAdminHistory(
+            @PathVariable UUID appointmentId
+    ) {
+        appointmentService.hideAppointmentForAdmin(appointmentId);
     }
 }
