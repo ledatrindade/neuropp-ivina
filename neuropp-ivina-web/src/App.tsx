@@ -20,6 +20,8 @@ import { MyDocuments } from "./pages/responsible/MyDocuments";
 
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { AdminAvailability } from "./pages/admin/AdminAvailability";
+import { AdminAppointments } from "./pages/admin/AdminAppointments";
+import { AdminDocuments } from "./pages/admin/AdminDocuments";
 
 function App() {
   return (
@@ -86,6 +88,42 @@ function App() {
           element={
             <AdminRoute>
               <AdminAvailability />
+            </AdminRoute>
+          }
+        />
+                
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/horarios"
+          element={
+            <AdminRoute>
+              <AdminAvailability />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/agendamentos"
+          element={
+            <AdminRoute>
+              <AdminAppointments />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/documentos"
+          element={
+            <AdminRoute>
+              <AdminDocuments />
             </AdminRoute>
           }
         />

@@ -2,14 +2,6 @@ import { Link } from "react-router";
 import { CalendarDays, ClipboardList, FileText } from "lucide-react";
 import { getAuthUser } from "../../services/authStorage";
 
-/*
- * Dashboard inicial da administradora.
- *
- * ADICIONE NOVOS CARDS AQUI:
- * Conforme o sistema crescer, podemos adicionar cards para relatórios,
- * documentos, feedbacks e configurações.
- */
-
 export function AdminDashboard() {
   const authUser = getAuthUser();
 
@@ -25,8 +17,8 @@ export function AdminDashboard() {
         </h1>
 
         <p className="mt-4 max-w-3xl text-lg leading-8 text-[#333333]/75">
-          Aqui você poderá organizar horários disponíveis, acompanhar
-          agendamentos e gerenciar informações importantes dos atendimentos.
+          Organize horários disponíveis, acompanhe agendamentos e gerencie
+          documentos privados liberados para os responsáveis.
         </p>
       </section>
 
@@ -38,16 +30,19 @@ export function AdminDashboard() {
           <CalendarDays className="text-[#3E8E91]" size={34} />
 
           <h2 className="mt-4 text-xl font-bold text-[#333333]">
-            Gerenciar horários
+            Horários
           </h2>
 
           <p className="mt-3 leading-7 text-[#333333]/70">
-            Cadastre dias e horários disponíveis para que responsáveis possam
-            agendar avaliações.
+            Cadastre, bloqueie e organize os horários disponíveis para
+            agendamento.
           </p>
         </Link>
 
-        <div className="rounded-3xl bg-white p-6 opacity-70 shadow-sm">
+        <Link
+          to="/admin/agendamentos"
+          className="rounded-3xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+        >
           <ClipboardList className="text-[#3E8E91]" size={34} />
 
           <h2 className="mt-4 text-xl font-bold text-[#333333]">
@@ -55,12 +50,15 @@ export function AdminDashboard() {
           </h2>
 
           <p className="mt-3 leading-7 text-[#333333]/70">
-            Em breve: acompanhamento dos agendamentos, presença, falta e
-            conclusão.
+            Veja avaliações marcadas, filtre por status e atualize o andamento
+            dos atendimentos.
           </p>
-        </div>
+        </Link>
 
-        <div className="rounded-3xl bg-white p-6 opacity-70 shadow-sm">
+        <Link
+          to="/admin/documentos"
+          className="rounded-3xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+        >
           <FileText className="text-[#3E8E91]" size={34} />
 
           <h2 className="mt-4 text-xl font-bold text-[#333333]">
@@ -68,10 +66,9 @@ export function AdminDashboard() {
           </h2>
 
           <p className="mt-3 leading-7 text-[#333333]/70">
-            Em breve: criação e liberação de documentos privados para
-            responsáveis.
+            Crie documentos privados e libere o acesso para responsáveis.
           </p>
-        </div>
+        </Link>
       </section>
     </main>
   );

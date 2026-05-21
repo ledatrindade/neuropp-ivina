@@ -110,16 +110,25 @@ export function Header() {
           </nav>
         )}
 
+        
         {isAdminArea && (
-          <nav className="hidden items-center gap-5 text-sm font-medium text-[#333333] md:flex">
+        <nav className="hidden items-center gap-5 text-sm font-medium text-[#333333] md:flex">
             <Link className="hover:text-[#3E8E91]" to="/admin">
-              Painel
+            Painel
             </Link>
 
             <Link className="hover:text-[#3E8E91]" to="/admin/horarios">
-              Horários
+            Horários
             </Link>
-          </nav>
+
+            <Link className="hover:text-[#3E8E91]" to="/admin/agendamentos">
+            Agendamentos
+            </Link>
+
+            <Link className="hover:text-[#3E8E91]" to="/admin/documentos">
+            Documentos
+            </Link>
+        </nav>
         )}
 
         <div className="flex items-center gap-2">
