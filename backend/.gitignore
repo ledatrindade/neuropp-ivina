@@ -1,0 +1,30 @@
+# Maven
+/target/
+.mvn/timing.properties
+.mvn/wrapper/dists/
+
+# IDEs
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Segredos e ambiente
+.env
+.env.*
+!.env.example
+application-local.properties
+
+# Logs
+*.log
+logs/
+
+# Arquivos temporários
+*.tmp
+*.swp

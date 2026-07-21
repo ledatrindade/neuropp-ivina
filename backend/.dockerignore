@@ -1,0 +1,9 @@
+target
+.git
+.idea
+.vscode
+.env
+*.log
+README.md
+
+.mvn/wrapper/dists

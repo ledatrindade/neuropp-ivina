@@ -1,0 +1,13 @@
+package com.lttech.neuropp.config;
+
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
+
+@Validated
+@ConfigurationProperties(prefix = "app.security")
+public record AppSecurityProperties(
+        @Min(4) @Max(16) int bcryptStrength
+) {
+}
