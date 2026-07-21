@@ -1,0 +1,28 @@
+#!/bin/sh
+set -eu
+
+BASE_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+PROPERTIES="$BASE_DIR/.mvn/wrapper/maven-wrapper.properties"
+DIST_URL=$(sed -n 's/^distributionUrl=//p' "$PROPERTIES")
+VERSION=$(printf '%s' "$DIST_URL" | sed -n 's#.*apache-maven-\([0-9.]*\)-bin\.zip#\1#p')
+MAVEN_HOME="$BASE_DIR/.mvn/wrapper/dists/apache-maven-$VERSION"
+ZIP_FILE="$BASE_DIR/.mvn/wrapper/dists/apache-maven-$VERSION-bin.zip"
+
+if [ ! -x "$MAVEN_HOME/bin/mvn" ]; then
+  mkdir -p "$(dirname "$ZIP_FILE")"
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL "$DIST_URL" -o "$ZIP_FILE"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -q "$DIST_URL" -O "$ZIP_FILE"
+  else
+    echo "É necessário ter curl ou wget para baixar o Maven." >&2
+    exit 1
+  fi
+  command -v unzip >/dev/null 2>&1 || {
+    echo "É necessário ter o comando unzip instalado." >&2
+    exit 1
+  }
+  unzip -q -o "$ZIP_FILE" -d "$(dirname "$MAVEN_HOME")"
+fi
+
+exec "$MAVEN_HOME/bin/mvn" "$@"

@@ -1,0 +1,41 @@
+MIT License
+
+Copyright (c) 2026 NeuroPP Ivina contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-------------------------------------------------------------------------------
+AVISO SOBRE IMAGENS, MARCA E CONTEÚDO INSTITUCIONAL
+-------------------------------------------------------------------------------
+
+A licença MIT acima se aplica ao código-fonte e à documentação técnica deste
+repositório.
+
+Ela não concede, por si só, direito de reutilização sobre:
+
+- fotografias ou imagens pessoais;
+- nome, imagem, identidade visual, logotipo ou marca profissional;
+- textos institucionais e materiais de divulgação;
+- arquivos de terceiros identificados com licença própria;
+- dados pessoais, clínicos ou de pacientes.
+
+Esses materiais continuam pertencendo aos respectivos titulares e somente
+podem ser reutilizados mediante autorização ou licença específica.
+
+Este repositório de demonstração não deve conter dados reais de pacientes.

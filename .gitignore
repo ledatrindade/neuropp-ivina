@@ -1,24 +1,105 @@
-# Java / Maven
-target/
-*.class
+# =========================================================
+# Variáveis de ambiente e segredos
+# =========================================================
 
-# IDE
-.idea/
-.vscode/
-*.iml
-
-# Variáveis e segredos
 .env
 .env.*
+!.env.example
 
-# Logs
-*.log
+**/.env
+**/.env.*
+!**/.env.example
 
+# =========================================================
+# Frontend — Node, React e Vite
+# =========================================================
+
+node_modules/
+**/node_modules/
+
+dist/
+**/dist/
+
+.vite/
+**/.vite/
+
+coverage/
+**/coverage/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================================================
+# Backend — Java e Maven
+# =========================================================
+
+target/
+**/target/
+
+*.class
+*.jar
+*.war
+*.ear
+
+.mvn/timing.properties
+
+# O Maven Wrapper deve permanecer no repositório
+!.mvn/
+!.mvn/wrapper/
+!.mvn/wrapper/maven-wrapper.properties
+!mvnw
+!mvnw.cmd
+
+# =========================================================
+# Banco de dados
+# =========================================================
+
+postgres-data/
+postgres_data/
+data/postgres/
+*.sql.gz
+*.dump
+*.backup
+
+# =========================================================
+# IDEs e editores
+# =========================================================
+
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# =========================================================
 # Sistema operacional
+# =========================================================
+
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Front-end futuro
-node_modules/
-dist/
-build/
+# =========================================================
+# Logs e arquivos temporários
+# =========================================================
+
+*.log
+logs/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# =========================================================
+# Pacotes e cópias locais
+# =========================================================
+
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.sha256
